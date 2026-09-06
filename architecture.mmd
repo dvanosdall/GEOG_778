@@ -1,0 +1,51 @@
+flowchart TD
+
+    %% Data Sources
+    subgraph DATA["Data Sources"]
+        LST["USGS Land Surface Temperature"]
+        CANOPY["USDA Tree Canopy Cover"]
+        NLCD["Annual NLCD"]
+        ACS["Census ACS"]
+        OMAHA["Omaha / Local GIS"]
+    end
+
+    %% Processing
+    subgraph PROCESS["Data Processing & Management"]
+        ETL["Python ETL"]
+        DB[("PostgreSQL + PostGIS")]
+    end
+
+    %% Analysis
+    subgraph ANALYSIS["Geospatial Analysis"]
+        ENGINE["Python Analysis Engine"]
+        METRICS["Spatial Metrics"]
+        MCDA["Multi-Criteria Analysis"]
+        SCENARIO["Scenario Analysis"]
+    end
+
+    %% Application
+    subgraph APP["Application & Visualization"]
+        API["API / Application Layer"]
+        KEPLER["Kepler.gl"]
+    end
+
+    %% User
+    USER["Planner / Decision Maker"]
+
+    %% Connections
+    LST --> ETL
+    CANOPY --> ETL
+    NLCD --> ETL
+    ACS --> ETL
+    OMAHA --> ETL
+
+    ETL --> DB
+    DB --> ENGINE
+    ENGINE --> METRICS
+    METRICS --> MCDA
+    MCDA --> SCENARIO
+    SCENARIO --> DB
+
+    DB --> API
+    API --> KEPLER
+    KEPLER --> USER
