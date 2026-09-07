@@ -135,7 +135,7 @@ These interactions are intended to make the application useful for decision supp
 
 [Back to Table of Contents](#table-of-contents)
 
-**GIS&T Body of Knowledge**
+## 6. GIS&T Body of Knowledge
 
 The project draws on multiple knowledge areas identified in the UCGIS Geographic Information Science & Technology Body of Knowledge.  The most directly applicable areas are **Analytics and Modeling (AM), Data Management (DM), Cartography and Visualization (CV), Programming and Development (PD), and Domain Applications (DA)**.
 
