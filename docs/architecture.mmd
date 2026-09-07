@@ -24,15 +24,16 @@ flowchart TD
     end
 
     %% Application
-    subgraph APP["Application & Visualization"]
-        API["API / Application Layer"]
-        KEPLER["Kepler.gl"]
+    subgraph APP["Web Application & Visualization"]
+        API["Python API / Application Layer"]
+        JS["JavaScript Web Application"]
+        KEPLER["Kepler.gl / Mapping Library"]
     end
 
     %% User
     USER["Planner / Decision Maker"]
 
-    %% Connections
+    %% Data Flow
     LST --> ETL
     CANOPY --> ETL
     NLCD --> ETL
@@ -46,6 +47,8 @@ flowchart TD
     MCDA --> SCENARIO
     SCENARIO --> DB
 
+    %% Application Flow
     DB --> API
-    API --> KEPLER
-    KEPLER --> USER
+    API <--> JS
+    JS --> KEPLER
+    KEPLER <--> USER
