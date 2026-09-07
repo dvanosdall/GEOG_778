@@ -135,43 +135,21 @@ These interactions are intended to make the application useful for decision supp
 
 [Back to Table of Contents](#table-of-contents)
 
-## 6. GIS&T Body of Knowledge
+**GIS&T Body of Knowledge**
 
-The project applies concepts and technical skills from multiple areas of the GIS&T Body of Knowledge.
+The project draws on multiple knowledge areas identified in the UCGIS Geographic Information Science & Technology Body of Knowledge.  The most directly applicable areas are **Analytics and Modeling (AM), Data Management (DM), Cartography and Visualization (CV), Programming and Development (PD), and Domain Applications (DA)**.
 
-### Spatial Analysis
+**Analytics and Modeling (AM)** is applied through spatial analysis and the development of metrics to evaluate relationships between urban heat, land cover, tree canopy, population, and other geographic factors.  The project will combine these factors to identify areas where additional vegetation or other mitigation strategies may have the greatest potential to reduce heat exposure.  The analytical framework can also be used to compare different assumptions and potential intervention scenarios.
 
-Spatial analysis will be used to evaluate relationships among heat, vegetation, land cover, population, and other geographic variables.  Spatial operations may include spatial joins, overlays, proximity analysis, zonal statistics, and other spatial measurements.
+**Data Management (DM)** is applied through the integration, organization, and management of raster and vector datasets within PostgreSQL/PostGIS.  The database will provide a centralized structure for source datasets, derived analytical layers, criteria, and results while supporting the repeatable processing of the project's geographic data.
 
-### Raster Analysis
+**Cartography and Visualization (CV)** is applied through interactive web mapping and visual communication of urban heat conditions, contributing factors, and potential mitigation priorities.  The application will allow users to explore spatial patterns and understand how different geographic factors contribute to areas of elevated heat exposure.
 
-Raster analysis will be important for working with land surface temperature, tree canopy, land cover, and impervious surface datasets.  Raster processing will include alignment, resampling where necessary, masking, classification, aggregation, and calculation of derived indicators.
+**Programming and Development (PD)** is applied through Python-based data processing and analysis, automated workflows, database interaction, and JavaScript-based web application development.  Programming will support a reproducible workflow in which datasets can be processed consistently and analytical criteria can be adjusted as needed.
 
-### Geospatial Data Management
+**Domain Applications (DA)** connects these GIS&T methods to the specific application domain of urban heat mitigation and planning in Omaha.  The project applies geographic information technologies to a practical planning problem involving heat exposure, vegetation, land cover, population, and potential mitigation strategies.
 
-The project will require integrating datasets with different formats, spatial resolutions, coordinate systems, geographic units, and attribute structures.  Data management techniques will be used to standardize these datasets and prepare them for analysis.
-
-### Spatial Databases
-
-PostgreSQL and PostGIS will provide the spatial database environment for storing source data, processed datasets, analytical indicators, and scenario results.  Spatial database techniques will allow the analytical workflow and application to access and query geographic information efficiently.
-
-### Geovisualization
-
-Geovisualization will be used to communicate spatial patterns and analytical results.  The project will consider how symbology, classification, map interaction, and visual hierarchy affect the interpretation of urban heat mitigation information.
-
-### Interactive Mapping
-
-The project will apply interactive mapping techniques to allow users to explore geographic information, query locations, compare layers, and investigate analytical results.
-
-### Geospatial Application Development
-
-The project will combine Python based geospatial analysis with JavaScript based application development.  An application layer will connect the spatial database and analytical results with the web interface.
-
-### Geographic Information Communication
-
-The project will require communicating complex spatial analysis in a form that can be understood by users who may not be GIS specialists.  The interface will therefore need to communicate both the results and the factors contributing to those results.
-
-The combination of these areas is a central component of the project.  The project requires more than applying a single GIS analysis technique because data processing, spatial analysis, database management, application development, visualization, and communication must work together as a single system.
+Together, these knowledge areas demonstrate that the project requires more than a single GIS technique.  It combines spatial analysis, data management, cartographic visualization, programming, and domain-specific application to develop a decision-support system for evaluating urban heat mitigation opportunities in Omaha.
 
 [Back to Table of Contents](#table-of-contents)
 
