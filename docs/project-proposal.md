@@ -4,6 +4,34 @@
 https://github.com/dvanosdall/GEOG_778
 **GEOG 778, Fall 2026**
 
+## Table of Contents
+
+1. [Problem Statement and Purpose](#1-problem-statement-and-purpose)
+2. [Intended Audience](#2-intended-audience)
+3. [Data Sources and Availability](#3-data-sources-and-availability)
+4. [Proposed Final Product](#4-proposed-final-product)
+5. [Web Application and User Interaction](#5-web-application-and-user-interaction)
+   - [Interactive Mapping](#interactive-mapping)
+   - [Spatial Querying](#spatial-querying)
+   - [Criteria Inspection](#criteria-inspection)
+   - [Scenario Analysis](#scenario-analysis)
+   - [Scenario Comparison](#scenario-comparison)
+   - [Summary Statistics and Charts](#summary-statistics-and-charts)
+   - [Results Export](#results-export)
+6. [GIS&T Body of Knowledge](#6-gist-body-of-knowledge)
+7. [Technical Skills and Methods](#7-technical-skills-and-methods)
+   - [Python Programming](#python-programming)
+   - [Raster and Vector Processing](#raster-and-vector-processing)
+   - [Spatial Database Development](#spatial-database-development)
+   - [Multi Criteria Decision Analysis](#multi-criteria-decision-analysis)
+   - [Scenario and Sensitivity Analysis](#scenario-and-sensitivity-analysis)
+   - [JavaScript Application Development](#javascript-application-development)
+   - [Version Control and Reproducibility](#version-control-and-reproducibility)
+8. [System Architecture](#8-system-architecture)
+9. [Project Feasibility and Scope](#9-project-feasibility-and-scope)
+10. [Expected Outcomes](#10-expected-outcomes)
+11. [References](#11-references)
+
 ## 1. Problem Statement and Purpose
 
 Urban heat is an important place based problem in Omaha, Nebraska.  Land surface temperature, tree canopy, impervious surfaces, land cover, and population distribution vary across the city and contribute to differences in heat exposure and the potential effectiveness of different mitigation strategies.  Omaha has also identified climate resilience, greenspace, and tree canopy as important areas for planning and investment.
