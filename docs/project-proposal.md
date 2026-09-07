@@ -242,6 +242,10 @@ The general data flow is:
 
 > **Data Sources → Python ETL → PostgreSQL/PostGIS → Python Analysis Engine → Spatial Metrics → Multi Criteria Analysis → Scenario Analysis → Application Layer → JavaScript Web Application → Interactive Map**
 
+Figure 1. Proposed system architecture. The system uses Python to acquire and process geospatial data, PostgreSQL/PostGIS to manage spatial data, and a Python-based analysis workflow to calculate spatial metrics and perform multi-criteria and scenario analysis. Results are provided to a JavaScript web application and displayed through an interactive mapping library. Users can modify criteria and scenarios and examine how those choices affect identified mitigation priorities.
+
+[![Urban Heat Mitigation Toolkit Architecture](architecture.png)](architecture.png)
+
 The application will also support interaction in the opposite direction.  User selections and scenario settings can be passed from the JavaScript application through the application layer to the analytical and database components, allowing updated results to be returned to the map.
 
 This modular structure is intended to separate the analytical workflow from the presentation layer.  As a result, analytical processing can be rerun with updated datasets or criteria without requiring the entire visualization system to be rebuilt.
