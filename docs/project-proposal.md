@@ -314,11 +314,11 @@ Initial project development will rely primarily on publicly available datasets a
 
 Primary data sources expected to be referenced include:
 
-- U.S. Geological Survey, Landsat derived Land Surface Temperature
-- USDA Forest Service, Tree Canopy Cover
-- Multi Resolution Land Characteristics Consortium, Annual National Land Cover Database
-- U.S. Census Bureau, American Community Survey
-- City of Omaha and other applicable local GIS data sources
+- U.S. Geological Survey, Landsat derived Land Surface Temperature - https://www.usgs.gov/landsat-missions/landsat-surface-temperature
+- USDA Forest Service, Tree Canopy Cover - https://data.fs.usda.gov/geodata/rastergateway/treecanopycover/
+- Multi Resolution Land Characteristics Consortium, Annual National Land Cover Database - https://www.mrlc.gov/data
+- U.S. Census Bureau, American Community Survey - https://www.census.gov/programs-surveys/acs/about.html
+- City of Omaha and other applicable local GIS data sources - https://data.dogis.org/
 
 Additional academic literature concerning urban heat, tree canopy, heat mitigation, multi criteria decision analysis, and urban climate resilience will be incorporated during the implementation and research phases of the project.
 
