@@ -1,8 +1,14 @@
-# Urban Heat Mitigation Decision-Support Toolkit for Omaha
-
 **David Vanosdall**
 https://github.com/dvanosdall/GEOG_778
 **GEOG 778, Fall 2026**
+
+-----------------------------------------------------------------
+## Questions for Discussion and Instructor Feedback
+[Questions for Discussion and Instructor Feedback](feedback-questions.md)
+
+-----------------------------------------------------------------
+
+# Urban Heat Mitigation Decision-Support Toolkit for Omaha
 
 ## Table of Contents
 
@@ -320,12 +326,12 @@ Primary data sources expected to be referenced include:
 - U.S. Census Bureau, American Community Survey - https://www.census.gov/programs-surveys/acs/about.html
 - City of Omaha and other applicable local GIS data sources - https://data.dogis.org/
 
-Additional academic literature concerning urban heat, tree canopy, heat mitigation, multi criteria decision analysis, and urban climate resilience will be incorporated during the implementation and research phases of the project.
-
 GitHub Repository
 Vanosdall, D. (2026). GEOG_778: Urban heat mitigation decision-support toolkit for Omaha [Computer software]. GitHub. https://github.com/dvanosdall/GEOG_778
 
 Additional AI tools that were leveraged for quick formatting or quick scripting assistance
 GitHub. (2026). GitHub Copilot [AI coding assistant]. GitHub. https://github.com/features/copilot
+
+Additional academic literature concerning urban heat, tree canopy, heat mitigation, multi criteria decision analysis, and urban climate resilience will be incorporated during the implementation and research phases of the project.
 
 [Back to Table of Contents](#table-of-contents)
