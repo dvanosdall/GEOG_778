@@ -232,35 +232,36 @@ Git and GitHub will be used to maintain source code, documentation, and project 
 
 [Back to Table of Contents](#table-of-contents)
 
-## 8. System Architecture
+## 8.  System Architecture
 
-The proposed architecture separates data processing, spatial analysis, data management, application services, and visualization into distinct components.
+The proposed architecture separates data acquisition and processing, spatial analysis, data management, application services, and visualization into distinct components.   The system is designed to run within a local development and execution environment, allowing the database, analytical workflow, API, and web application to be developed and tested without requiring cloud hosting.
 
 The major components are:
 
-1. **Data Sources**
-2. **Python ETL**
-3. **PostgreSQL and PostGIS**
-4. **Python Analysis Engine**
-5. **Spatial Metrics**
-6. **Multi Criteria Analysis**
-7. **Scenario Analysis**
-8. **Python API and Application Layer**
-9. **JavaScript Web Application**
-10. **Kepler.gl or similar mapping library**
-11. **Planner or Decision Maker**
+1.   **Data Sources**
+2.   **Python ETL and Data Processing**
+3.   **PostgreSQL and PostGIS**
+4.   **Python Analysis Engine**
+5.   **Spatial Metrics**
+6.   **Multi-Criteria Analysis**
+7.   **Scenario Analysis**
+8.   **Python API and Application Interface**
+9.   **JavaScript Web Application**
+10.   **Kepler.gl or Similar Mapping Library**
+11.   **Local Development and Execution Environment**
+12.   **Planner or Decision Maker**
 
 The general data flow is:
 
-> **Data Sources → Python ETL → PostgreSQL/PostGIS → Python Analysis Engine → Spatial Metrics → Multi Criteria Analysis → Scenario Analysis → Application Layer → JavaScript Web Application → Interactive Map**
+> **Data Sources → Python ETL → PostgreSQL/PostGIS → Python Analysis Engine → Spatial Metrics → Multi-Criteria Analysis → Scenario Analysis → Application Interface → JavaScript Web Application → Interactive Map**
 
-Figure 1. Proposed system architecture. The system uses Python to acquire and process geospatial data, PostgreSQL/PostGIS to manage spatial data, and a Python-based analysis workflow to calculate spatial metrics and perform multi-criteria and scenario analysis. Results are provided to a JavaScript web application and displayed through an interactive mapping library. Users can modify criteria and scenarios and examine how those choices affect identified mitigation priorities.
+Figure 1.   Proposed system architecture.   The system uses Python and associated geospatial libraries to acquire and process geospatial data, PostgreSQL/PostGIS to manage spatial data, and a Python-based analysis workflow to calculate spatial metrics and perform multi-criteria and scenario analysis.   Results are provided to a JavaScript web application and displayed through an interactive mapping library.   The system is intended to operate locally during development and execution.
 
 [![Urban Heat Mitigation Toolkit Architecture](architecture.png)](architecture.png)
 
-The application will also support interaction in the opposite direction.  User selections and scenario settings can be passed from the JavaScript application through the application layer to the analytical and database components, allowing updated results to be returned to the map.
+The application will also support interaction in the opposite direction.   User selections and scenario settings can be passed from the JavaScript application through the application interface to the analytical and database components, allowing updated results to be returned to the map.
 
-This modular structure is intended to separate the analytical workflow from the presentation layer.  As a result, analytical processing can be rerun with updated datasets or criteria without requiring the entire visualization system to be rebuilt.
+This modular structure is intended to separate the analytical workflow from the presentation layer.   As a result, analytical processing can be rerun with updated datasets or criteria without requiring the entire visualization system to be rebuilt.
 
 The architecture may be refined during implementation as specific technologies and application requirements are established.
 

@@ -9,25 +9,30 @@ flowchart TD
         OMAHA["Omaha / Local GIS"]
     end
 
-    %% Processing
-    subgraph PROCESS["Data Processing & Management"]
-        ETL["Python ETL"]
+    %% Data Processing & Management
+    subgraph PROCESS["Data Management & Processing"]
+        ETL["Python ETL<br/>GeoPandas • Rasterio • Shapely<br/>Pandas • NumPy • PyProj"]
         DB[("PostgreSQL + PostGIS")]
     end
 
     %% Analysis
-    subgraph ANALYSIS["Geospatial Analysis"]
+    subgraph ANALYSIS["Geospatial Analysis & Modeling"]
         ENGINE["Python Analysis Engine"]
-        METRICS["Spatial Metrics"]
-        MCDA["Multi-Criteria Analysis"]
-        SCENARIO["Scenario Analysis"]
+        METRICS["Spatial Metrics<br/>Heat • Canopy • Impervious • Exposure"]
+        MCDA["Multi-Criteria Analysis<br/>Normalization • Weighted Criteria"]
+        SCENARIO["Scenario Analysis<br/>Alternative Weights / Priorities"]
     end
 
     %% Application
-    subgraph APP["Web Application & Visualization"]
-        API["Python API / Application Layer"]
+    subgraph APP["Software Development & Visualization"]
+        API["Python API / Application Interface"]
         JS["JavaScript Web Application"]
         KEPLER["Kepler.gl / Mapping Library"]
+    end
+
+    %% Hosting
+    subgraph HOST["Hosting Environment"]
+        LOCAL["Local Development / Execution Environment"]
     end
 
     %% User
@@ -52,3 +57,8 @@ flowchart TD
     API <--> JS
     JS --> KEPLER
     KEPLER <--> USER
+
+    %% Environment
+    HOST -.-> DB
+    HOST -.-> API
+    HOST -.-> JS
