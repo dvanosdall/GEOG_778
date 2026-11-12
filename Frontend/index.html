@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omaha Urban Heat Mitigation Decision-Support Toolkit</title>
+
+    <!-- Load Mapbox GL CSS style library -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v1.13.2/mapbox-gl.css" rel="stylesheet" />
+
+    <!-- Load Google Fonts for clean professional dashboard typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Load modular, decoupled CSS stylesheets defining layout variables and styles -->
+    <link href="css/variables.css" rel="stylesheet" />
+    <link href="css/layout.css" rel="stylesheet" />
+    <link href="css/components.css" rel="stylesheet" />
+
+    <!-- Load Regenerator Runtime Polyfill required by Kepler.gl UMD -->
+    <script src="https://unpkg.com/regenerator-runtime@0.13.9/runtime.min.js" crossorigin></script>
+    <script>
+        // Define global on window as some dependencies assume a Node-like global environment
+        window.global = window;
+    </script>
+
+    <!-- Load React and ReactDOM libraries via CDN -->
+    <script src="https://unpkg.com/react@16.14.0/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16.14.0/umd/react-dom.production.min.js" crossorigin></script>
+
+    <!-- Load Redux and React-Redux state management libraries -->
+    <script src="https://unpkg.com/redux@4.1.2/dist/redux.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-redux@7.2.6/dist/react-redux.min.js" crossorigin></script>
+
+    <!-- Load Styled Components for Kepler.gl component styling -->
+    <script src="https://unpkg.com/styled-components@5.3.3/dist/styled-components.min.js" crossorigin></script>
+
+    <!-- Load Mapbox GL JavaScript mapping engine -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v1.13.2/mapbox-gl.js" crossorigin></script>
+
+    <!-- Load the Kepler.gl UMD production bundle -->
+    <script src="https://unpkg.com/kepler.gl@2.5.5/umd/keplergl.min.js" crossorigin></script>
+</head>
+<body>
+
+    <!-- Target container where the complete Dashboard will be rendered -->
+    <div id="dashboard-application-container"></div>
+
+    <!-- Load decoupled modular javascript files containing generator logic, MCDA math, and React mounting -->
+    <script src="js/data_generator.js"></script>
+    <script src="js/mcda_engine.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>

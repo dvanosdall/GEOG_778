@@ -1,236 +1,150 @@
-# GEOG_778
-
-Repo for my GEOG_778 project
-
-David Vanosdall / Fall 2026 / Geography 778
-
-## Table of Contents
-
-- [Urban Heat Mitigation Decision-Support Toolkit for Omaha](#urban-heat-mitigation-decision-support-toolkit-for-omaha)
-  - [Project Overview](#project-overview)
-  - [Decision-Support Approach](#decision-support-approach)
-  - [Intended Users](#intended-users)
-  - [Data Sources](#data-sources)
-  - [System Architecture](#system-architecture)
-  - [Technology Stack](#technology-stack)
-  - [Planned Functionality](#planned-functionality)
-  - [GIS&T Knowledge Areas](#gist-knowledge-areas)
-  - [Project Goals](#project-goals)
-  - [Project Status](#project-status)
-  - [Future Development](#future-development)
-  - [Disclaimer](#disclaimer)
-
-## Urban Heat Mitigation Decision-Support Toolkit for Omaha
-
-A configurable geospatial decision-support system for evaluating urban heat-mitigation opportunities in Omaha, Nebraska.
-
-[Back to Table of Contents](#table-of-contents)
-
-## Project Overview
-
-Urban heat is an important place based problem in Omaha.  Factors associated with urban heat exposure, including land surface temperature, tree canopy, impervious surfaces, land cover, and population distribution, vary considerably across the city.
-
-Omaha has also identified climate resilience, greenspace, and tree canopy as important areas for planning and investment.  However, translating these broad planning goals into geographically specific priorities requires integrating multiple types of spatial information.
-
-This project will develop a **GIS based urban heat mitigation decision-support toolkit** that identifies areas of Omaha where different heat-mitigation strategies may provide the greatest potential benefit.
-
-The project is intended to move beyond simply identifying where urban heat exists.  The system will help answer:
-
-- **Why is an area a priority?**
-- **What type of intervention may be appropriate?**
-- **How do priorities change when different planning criteria are emphasized?**
-
-[Back to Table of Contents](#table-of-contents)
-
-## Decision-Support Approach
-
-The system will combine multiple spatial criteria to evaluate potential heat-mitigation opportunities.
-
-A conceptual scoring workflow is:
-
-> **Heat intensity + canopy deficit + imperviousness + population exposure + site/intervention constraints → normalized criteria → configurable weighting → intervention priority**
-
-For example:
-
-- High surface temperature + low tree canopy + high population exposure + sufficient planting space → **tree-canopy priority**
-- High surface temperature + high imperviousness + limited planting opportunities → **cool-surface priority**
-- High heat exposure + sensitive population or facility + limited shade → **shade intervention priority**
-
-The system will support configurable criteria and weighting so that different planning scenarios can be evaluated and compared.
-
-[Back to Table of Contents](#table-of-contents)
-
-## Intended Users
-
-The primary intended users are:
-
-- Municipal planners
-- Urban forestry staff
-- Sustainability and climate-resilience personnel
-- Organizations involved in heat-mitigation planning and investment
-
-The toolkit may also provide value to other GIS professionals or researchers interested in evaluating urban heat-mitigation strategies.
-
-[Back to Table of Contents](#table-of-contents)
-
-## Data Sources
-
-The initial analysis will use established public geospatial datasets.
-
-| Dataset | Purpose |
-|---|---|
-| **USGS Landsat-derived Land Surface Temperature** | Measure urban heat intensity |
-| **USDA Forest Service Tree Canopy Cover** | Measure existing tree canopy and canopy deficits |
-| **MRLC Annual NLCD** | Land cover and impervious-surface characteristics |
-| **U.S. Census ACS** | Population and demographic exposure |
-| **Omaha / Local GIS Data** | Roads, schools, parks, public facilities, and other local context |
-
-A recent data year will be used for the primary analysis.  Historical datasets may be incorporated later as an optional capability for comparison or validation.
-
-[Back to Table of Contents](#table-of-contents)
-
-## System Architecture
-
-The system is designed as a modular geospatial workflow:
-
-[![Urban Heat Mitigation Toolkit Architecture](docs/architecture.png)](docs/architecture.png)
-
-The architecture separates the analytical engine from the visualization layer.  This allows the analysis to be rerun with updated datasets or different criteria without requiring the visualization component to be rebuilt.
-
-The detailed architecture diagram is maintained separately in the project documentation.
-
-[Back to Table of Contents](#table-of-contents)
-
-## Technology Stack
-
-The technology stack is currently envisioned as:
-
-### Data Processing & Analysis
-
-- **Python**
-- Raster and vector geospatial processing
-- Spatial statistics and analysis
-- Multi-criteria decision analysis
-- Automated data processing
-
-### Spatial Database
-
-- **PostgreSQL**
-- **PostGIS**
-
-PostGIS will provide the spatial database environment for storing source data, derived analytical layers, criteria, and intervention-priority results.
-
-### Visualization & Application
-
-- **JavaScript**
-- **HTML / CSS**
-- **Kepler.gl or similar geospatial visualization library**
-- Web-based interactive mapping
-- API/application layer
-
-The exact application framework will be determined during implementation.
-
-### Development
-
-- Git
-- GitHub
-- Visual Studio Code
-- Python virtual environment / dependency management
-
-[Back to Table of Contents](#table-of-contents)
-
-## Planned Functionality
-
-The completed toolkit is expected to support functionality such as:
-
-- Interactive exploration of urban heat conditions
-- Display of analytical criteria
-- Spatial querying
-- Inspection of contributing criteria
-- Configurable criteria weights
-- Multiple planning scenarios
-- Comparison of scenario results
-- Identification of potential intervention types
-- Summary statistics and charts
-- Export of analytical results for use in other GIS software
-
-[Back to Table of Contents](#table-of-contents)
-
-## GIS&T Knowledge Areas
-
-The project applies concepts and technical skills from several areas of the GIS&T Body of Knowledge, including:
-
-- Spatial analysis
-- Raster analysis
-- Geospatial data management
-- Spatial databases
-- Geovisualization
-- Interactive mapping
-- Geospatial application development
-- Geographic information communication
-
-The project combines these areas into a single reproducible geospatial workflow rather than applying a single GIS technique.
-
-[Back to Table of Contents](#table-of-contents)
-
-## Project Goals
-
-The primary goal is to create a **reproducible and configurable geospatial decision-support system for evaluating urban heat-mitigation opportunities in Omaha**.
-
-The system should allow users to move from:
-
-> **"Where is urban heat a problem?"**
-
-toward:
-
-> **"Why is this area a priority?"**
-
-> **"What type of intervention may be appropriate here?"**
-
-> **"How do those priorities change when planning criteria change?"**
-
-[Back to Table of Contents](#table-of-contents)
-
-## Project Status
-
-**Current phase:** Project planning and architecture
-
-### Completed
-
-- [x] Project concept established
-- [x] Omaha identified as study area
-- [x] Initial data-source investigation
-- [x] Preliminary system architecture
-- [x] Git repository established
-- [x] Architecture diagram created
-
-### In Progress
-
-- [ ] Finalize data inventory
-- [ ] Establish project data schema
-- [ ] Design PostgreSQL/PostGIS database
-- [ ] Develop Python ETL workflow
-- [ ] Develop analytical criteria
-- [ ] Implement multi-criteria scoring
-- [ ] Develop interactive visualization
-- [ ] Implement scenario comparison
-- [ ] Test and validate results
-
-[Back to Table of Contents](#table-of-contents)
-
-## Future Development
-
-Potential future capabilities include:
-
-- Reproducible application installation and deployment
-- Additional intervention types
-- Additional local planning constraints
-- Expanded scenario and sensitivity analysis
-
-[Back to Table of Contents](#table-of-contents)
-
-## Disclaimer
-
-This project is an academic GIS development project.  Intervention priorities produced by the toolkit represent analytical results based on the selected datasets, criteria, and weighting assumptions.  They should be treated as decision-support information rather than definitive recommendations or engineering designs.
-
-[Back to Table of Contents](#table-of-contents)
+# Omaha Urban Heat Mitigation Decision-Support Toolkit
+
+Welcome to the **Omaha Urban Heat Mitigation Decision-Support Toolkit**! This project is an interactive geospatial decision-support application built to help municipal planners, urban foresters, and climate resilience coordinators identify spatial priority zones for urban heat mitigation in Omaha, Nebraska.
+
+The system evaluates multiple environmental and demographic criteria, letting users configure planning scenario weights to see how identified priorities and target interventions change in real-time.
+
+---
+
+## Project Directory Structure
+
+```text
+C:\Work\UrbanHeat/
+├── README.md                   # This file, with master setup and execution instructions
+├── AGENTS.md                   # Agent system specifications and architecture review
+├── Database/
+│   └── schema.sql              # SQL script defining PostgreSQL/PostGIS schemas and indexes
+├── Docs/
+│   ├── Vanosdall-MockupUserTesting.pdf
+│   ├── Vanosdall-Omaha_Urban_Heat_Project_Plan.pdf
+│   └── project-proposal.md     # Primary project requirements and guidelines
+├── Backend/
+│   └── app.py                  # FastAPI REST API database manager and MCDA calculation service
+├── Scripts/
+│   └── urban_heat_etl_analysis.py # Python ETL and spatial data processing pipeline
+└── Frontend/
+    ├── index.html              # Clean, modular index file launching the web dashboard
+    ├── css/
+    │   ├── variables.css       # Stylesheet defining theme variables and colors
+    │   ├── layout.css          # Stylesheet defining structural flexbox layout rules
+    │   └── components.css      # Stylesheet defining widgets, sliders, cards, and scrollbars
+    └── js/
+        ├── data_generator.js   # Script generating dynamic simulated spatial grid features
+        ├── mcda_engine.js      # Math engine computing linear MCDA and recommendation rules
+        └── app.js              # React engine mounting Kepler.gl and handling REST fetch connections
+```
+
+---
+
+## Technical Architecture & Stack
+
+1. **Frontend Presentation**: HTML5, Modular CSS3, and JavaScript compiled with:
+   * **React** (v16.14.0) & **Redux** (v4.1.2) for declarative state management.
+   * **Kepler.gl** (v2.5.5) & **Mapbox GL** (v1.13.2) loaded via CDN for high-performance canvas mapping.
+2. **Backend API**: **FastAPI** (Python >= 3.9) providing REST endpoints for database queries and real-time MCDA calculations.
+3. **Database Layer**: **PostgreSQL** with **PostGIS** spatial extensions.
+4. **ETL Pipeline**: Python scripts leveraging **GeoPandas**, **Rasterio**, **SQLAlchemy**, and **Shapely** to ingest, reproject, and aggregate raw rasters and shapefiles.
+
+---
+
+## Step-by-Step Setup and Execution Guide
+
+Follow these sequential steps to set up, deploy, and run the complete codebase on a system with full software access.
+
+### Step 1: Install System Requirements
+Install the following core packages on your host machine:
+1. **PostgreSQL Server** (version 13 or newer): [Download Installer](https://www.postgresql.org/download/)
+2. **PostGIS Extension Bundle**:
+   * On Windows: Open the "Application Stack Builder" utility packaged with your PostgreSQL installer. Expand "Spatial Extensions" and check **PostGIS**.
+   * On macOS: Use Postgres.app or Homebrew (`brew install postgis`).
+3. **Python** (version 3.9 or newer): [Download Installer](https://www.python.org/downloads/)
+
+### Step 2: Initialize the PostgreSQL/PostGIS Database
+1. Open your PostgreSQL command-line tool (`psql`) or graphical client (**pgAdmin**).
+2. Connect as a database superuser (`postgres`) and create the main target database:
+   ```sql
+   -- Create database instance
+   CREATE DATABASE urbanheat;
+   ```
+3. Connect to the newly created `urbanheat` database.
+4. Execute the SQL schema script provided in this repository to create tables, keys, and spatial indexes:
+   * Using command-line psql:
+     ```bash
+     # Run schema sql to initialize PostGIS tables and indexes
+     psql -U postgres -d urbanheat -f Database/schema.sql
+     ```
+   * Or open `Database/schema.sql` in pgAdmin's Query Tool, select the entire text, and click **Execute**.
+
+### Step 3: Create and Activate Python Virtual Environment
+1. Open a terminal or PowerShell console and navigate to the project directory:
+   ```bash
+   # Navigate to the workspace root directory
+   cd C:\Work\UrbanHeat
+   ```
+2. Generate a isolated Python virtual environment:
+   ```bash
+   # Create a virtual environment folder named 'venv'
+   python -m venv venv
+   ```
+3. Activate the virtual environment:
+   * On Windows (PowerShell):
+     ```powershell
+     # Activate environment inside PowerShell
+     venv\Scripts\Activate.ps1
+     ```
+   * On Windows (Command Prompt):
+     ```cmd
+     :: Activate environment inside Cmd
+     venv\Scripts\activate.bat
+     ```
+   * On macOS/Linux:
+     ```bash
+     # Activate environment inside Bash/Zsh
+     source venv/bin/activate
+     ```
+
+### Step 4: Install Python Packages
+With the virtual environment active, run `pip` to install all GIS, database, and REST API backend dependencies:
+```bash
+# Install core web service, database driver, ORM, and spatial geometry math dependencies
+pip install fastapi uvicorn sqlalchemy psycopg2-binary geopandas rasterio shapely pandas numpy
+```
+
+### Step 5: Start the FastAPI Backend REST Server
+1. Activate your virtual environment (if not already done).
+2. Launch the backend API using uvicorn:
+   ```bash
+   # Run the server with hot-reloads enabled on local port 8000
+   uvicorn Backend.app:fastapi_application_instance --reload --port 8000
+   ```
+3. Verify that the server is active by visiting `http://127.0.0.1:8000/` in your browser. You should receive a welcoming JSON message.
+4. You can explore and test the interactive OpenAPI documentation panel at: `http://127.0.0.1:8000/docs`
+
+### Step 6: Launch and Explore the Frontend Web Dashboard
+1. Open your File Explorer and navigate to: `C:\Work\UrbanHeat\Frontend\`
+2. Double-click the **`index.html`** file. It will automatically load in your default browser.
+3. **Dynamic Connectivity Auto-Detection**:
+   * If your local FastAPI server is running, the dashboard header banner will automatically display a green **"Database Connected"** status badge. Any weight adjustments and calculations will be offloaded to your local FastAPI backend!
+   * If the local server is offline, the dashboard header will display a gray **"Offline Mockup Mode"** status badge. It will smoothly fall back to our high-speed in-browser MCDA calculation engine and simulated Omaha coordinate grid, letting you run and test the full visual experience without any setup!
+4. Move the weight sliders, click the green **"Apply weights & Recalculate"** button, hover over grid tiles to inspect variables, and click **"Export Scenario GeoJSON"** to download your custom planning results!
+
+### Step 7: Load Real-World Geospatial Datasets
+Once you download your USGS Landsat surface temperatures, USDA canopy covers, NLCD land covers, and U.S. Census block group shapefiles:
+1. Place raw files into your workspace directory (e.g. under a `Data` folder).
+2. Open `Scripts/urban_heat_etl_analysis.py` in your code editor.
+3. Edit the raw file path variables to point to your local downloaded files.
+4. Execute the ETL script with your active virtual environment:
+   ```bash
+   # Run the spatial data pipeline to load processed variables into PostgreSQL
+   python Scripts/urban_heat_etl_analysis.py
+   ```
+5. The Python ETL pipeline will write processed data rows directly to your local `urbanheat` PostGIS database. The FastAPI backend will immediately read these real-world values on the next page refresh!
+
+---
+
+## Coding Standards Applied
+
+* **Verbose and Clear Variables**: Names throughout Python, JavaScript, CSS, and SQL (e.g., `calculated_final_mitigation_priority_score`) are explicitly defined for clarity.
+* **Block Comments Placement**: All inline documentation is written directly **above** the line or block of code it describes.
+* **Highly Modular Structure**: Decoupled styles, dynamic generator logic, math computations, and React rendering engines for clean maintainability.
+* **Zero Software Installations**: Designed to run immediately with native tools and CDN assets.
