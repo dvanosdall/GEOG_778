@@ -77,6 +77,9 @@ const DecisionSupportDashboardApplication = () => {
     // Processing status state
     const [isWorkflowProcessing, setIsWorkflowProcessing] = React.useState(false);
 
+    // About Dialog status state
+    const [isAboutModalOpen, setIsAboutModalOpen] = React.useState(false);
+
     // Redux store dispatch trigger
     const dispatch = ReactRedux.useDispatch();
 
@@ -167,8 +170,15 @@ const DecisionSupportDashboardApplication = () => {
                     isSplit: false
                 },
                 mapStyle: {
-                    styleType: 'dark',
-                    topLayerGroups: {},
+                    styleType: 'carto_dark',
+                    mapStyles: [
+                        {
+                            id: 'carto_dark',
+                            label: 'CartoDB Dark Matter',
+                            url: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+                            icon: 'https://api.mapbox.com/v4/mapbox.dark/page.png'
+                        }
+                    ],
                     visibleLayerGroups: {
                         label: true,
                         road: true,
@@ -299,7 +309,15 @@ const DecisionSupportDashboardApplication = () => {
                 // Connection Mode indicator Banner
                 useBackendAPI ?
                     React.createElement('span', { className: 'connection-mode-banner connection-mode-online' }, 'Database Connected') :
-                    React.createElement('span', { className: 'connection-mode-banner connection-mode-offline' }, 'Offline Mockup Mode')
+                    React.createElement('span', { className: 'connection-mode-banner connection-mode-offline' }, 'Offline Mockup Mode'),
+
+                React.createElement('br'),
+
+                // Trigger button for the About Modal dialog
+                React.createElement('button', {
+                    className: 'about-toolkit-trigger-button',
+                    onClick: () => setIsAboutModalOpen(true)
+                }, 'About Toolkit')
             ),
 
             // Section 1: Parameter Weight Sliders
@@ -475,7 +493,98 @@ const DecisionSupportDashboardApplication = () => {
                 React.createElement('div', { className: 'loading-spinner-element' }),
                 React.createElement('p', { className: 'loading-status-text' }, 'Recalculating spatial planning indicators...')
             ) : null
-        )
+        ),
+
+        // About Toolkit Modal Backdrop Overlay (renders only when active)
+        isAboutModalOpen ? React.createElement(
+            'div',
+            { className: 'about-modal-overlay-backdrop', onClick: () => setIsAboutModalOpen(false) },
+            
+            // Modal Card Container
+            React.createElement(
+                'div',
+                { className: 'about-modal-card-box', onClick: (evt) => evt.stopPropagation() },
+                
+                // Modal Header block
+                React.createElement(
+                    'div',
+                    { className: 'about-modal-header' },
+                    React.createElement('h2', { className: 'about-modal-header-title' }, 'About the Toolkit'),
+                    React.createElement('button', {
+                        className: 'about-modal-close-icon-button',
+                        onClick: () => setIsAboutModalOpen(false)
+                    }, '✕')
+                ),
+                
+                // Modal Body Scrollable area
+                React.createElement(
+                    'div',
+                    { className: 'about-modal-body-scrollable' },
+                    
+                    React.createElement('h3', null, 'Overview & Purpose'),
+                    React.createElement('p', null, 'This decision-support toolkit integrates physical environmental metrics, land cover databases, and demographic census data into a Multi-Criteria Decision Analysis (MCDA) framework. It is designed to identify priority areas and target interventions (urban forestry, cool pavements, shade structures) to mitigate urban heat stress across Omaha, Nebraska.'),
+                    
+                    React.createElement('h3', null, 'Primary Spatial Data Sources'),
+                    React.createElement(
+                        'ul',
+                        { className: 'about-modal-list-item-grid' },
+                        React.createElement('li', null, 
+                            React.createElement('span', { className: 'about-modal-item-label' }, 'USGS Landsat Land Surface Temperature'),
+                            React.createElement('a', { className: 'about-modal-item-link-anchor', href: 'https://www.usgs.gov/landsat-missions/landsat-surface-temperature', target: '_blank' }, 'Visit Website')
+                        ),
+                        React.createElement('li', null, 
+                            React.createElement('span', { className: 'about-modal-item-label' }, 'USDA Forest Service Tree Canopy Cover'),
+                            React.createElement('a', { className: 'about-modal-item-link-anchor', href: 'https://data.fs.usda.gov/geodata/rastergateway/treecanopycover/', target: '_blank' }, 'Visit Website')
+                        ),
+                        React.createElement('li', null, 
+                            React.createElement('span', { className: 'about-modal-item-label' }, 'NLCD developed imperviousness'),
+                            React.createElement('a', { className: 'about-modal-item-link-anchor', href: 'https://www.mrlc.gov/data', target: '_blank' }, 'Visit Website')
+                        ),
+                        React.createElement('li', null, 
+                            React.createElement('span', { className: 'about-modal-item-label' }, 'U.S. Census Bureau ACS demographics'),
+                            React.createElement('a', { className: 'about-modal-item-link-anchor', href: 'https://www.census.gov/programs-surveys/acs/about.html', target: '_blank' }, 'Visit Website')
+                        )
+                    ),
+                    
+                    React.createElement('h3', null, 'Core System Libraries'),
+                    React.createElement(
+                        'ul',
+                        { className: 'about-modal-list-item-grid' },
+                        React.createElement('li', null, 
+                            React.createElement('span', { className: 'about-modal-item-label' }, 'Geospatial mapping engine'),
+                            React.createElement('span', null, 'Kepler.gl & Mapbox GL')
+                        ),
+                        React.createElement('li', null, 
+                            React.createElement('span', { className: 'about-modal-item-label' }, 'State architecture management'),
+                            React.createElement('span', null, 'React & Redux')
+                        ),
+                        React.createElement('li', null, 
+                            React.createElement('span', { className: 'about-modal-item-label' }, 'Backend REST web service'),
+                            React.createElement('span', null, 'FastAPI (Python)')
+                        ),
+                        React.createElement('li', null, 
+                            React.createElement('span', { className: 'about-modal-item-label' }, 'Database relational storage'),
+                            React.createElement('span', null, 'PostgreSQL & PostGIS')
+                        )
+                    ),
+                    
+                    React.createElement('h3', null, 'Project Information & Co-Authors'),
+                    React.createElement('p', null, 'Created as an academic spatial analytics product under GEOG 778, Fall 2026, by David Vanosdall.'),
+                    React.createElement('p', null, 'Scripting, code formatting, and spatial database configuration assisted by GitHub Copilot and conversational AI developer agents.')
+                ),
+                
+                // Modal Footer
+                React.createElement(
+                    'div',
+                    { className: 'about-modal-footer' },
+                    React.createElement('button', {
+                        className: 'action-button-element',
+                        style: { width: 'auto', padding: '8px 24px' },
+                        onClick: () => setIsAboutModalOpen(false)
+                    }, 'Close')
+                )
+            )
+        ) : null
     );
 };
 
