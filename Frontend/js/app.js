@@ -80,6 +80,24 @@ const DecisionSupportDashboardApplication = () => {
     // About Dialog status state
     const [isAboutModalOpen, setIsAboutModalOpen] = React.useState(false);
 
+    // State for Mapbox Token input field
+    const [mapboxTokenInput, setMapboxTokenInput] = React.useState(localStorage.getItem('mapbox_token') || '');
+
+    // Function to save the token to browser local storage and reload the page
+    const handleSaveMapboxToken = () => {
+        if (mapboxTokenInput.trim().startsWith('pk.')) {
+            localStorage.setItem('mapbox_token', mapboxTokenInput.trim());
+            alert("Mapbox token saved successfully! Reloading map...");
+            window.location.reload();
+        } else if (mapboxTokenInput.trim() === '') {
+            localStorage.removeItem('mapbox_token');
+            alert("Mapbox token removed. Reloading map...");
+            window.location.reload();
+        } else {
+            alert("Invalid token format! Mapbox public tokens must start with 'pk.'.");
+        }
+    };
+
     // Redux store dispatch trigger
     const dispatch = ReactRedux.useDispatch();
 
@@ -483,7 +501,7 @@ const DecisionSupportDashboardApplication = () => {
                 id: 'omaha_toolkit_map',
                 width: window.innerWidth - 420,
                 height: window.innerHeight,
-                mapboxApiAccessToken: 'pk.eyJ1IjoibW9ja2VkdG9rZW4iLCJhIjoiY2p4NDV2cmx3MDB6ZDN6bzh2b3QycTJkayJ9.mockedtoken_notneeded'
+                mapboxApiAccessToken: window.urbanHeatApplicationConfig.mapboxPublicAccessToken || 'pk.eyJ1IjoibW9ja2VkdG9rZW4iLCJhIjoiY2p4NDV2cmx3MDB6ZDN6bzh2b3QycTJkayJ9.mockedtoken_notneeded'
             }),
 
             // Loading screen overlay during MCDA processing runs

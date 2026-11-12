@@ -49,6 +49,18 @@
     <!-- Load decoupled modular javascript files containing generator logic, MCDA math, and React mounting -->
     <script src="js/data_generator.js"></script>
     <script src="js/mcda_engine.js"></script>
+    
+    <!-- Load local private configuration file with a safe fallback object -->
+    <script src="js/config.js"></script>
+    <script>
+        // Initialize an empty config object fallback if config.js was not created or loaded yet
+        if (!window.urbanHeatApplicationConfig) {
+            window.urbanHeatApplicationConfig = {
+                mapboxPublicAccessToken: "YOUR_MAPBOX_TOKEN_HERE"
+            };
+        }
+    </script>
+
     <script src="js/app.js"></script>
 
 </body>

@@ -1,3 +1,7 @@
+# ==============================================================================
+# Gitignore configuration for Omaha Urban Heat Mitigation Toolkit
+# ==============================================================================
+
 # Python virtual environments
 venv/
 .venv/
@@ -21,3 +25,10 @@ __pycache__/
 # OS-generated files
 .DS_Store
 Thumbs.db
+
+# Ignore local frontend config containing sensitive credentials
+Frontend/js/config.js
+
+# Ignore backend and database config environment secrets
+.env
+Backend/.env
