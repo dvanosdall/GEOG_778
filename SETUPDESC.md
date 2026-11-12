@@ -77,20 +77,20 @@ Download and install the following software for your platform (Windows/macOS/Lin
 3. **Python** (version 3.9 or newer recommended): [Python Downloads](https://www.python.org/downloads/)
 
 ### Step 2: Set Up the PostgreSQL/PostGIS Database
-1. Open your PostgreSQL command-line utility (`psql`) or a graphical GUI like **pgAdmin**.
-2. Run the following command to create a new database named `urbanheat`:
+1. Connect to your PostgreSQL database server (e.g. your database server **`GEOG_778`**) using command-line `psql` or pgAdmin.
+2. Run the following command to create a new database named `urbanheat` (or any name you prefer):
    ```sql
    -- Create the main database instance
    CREATE DATABASE urbanheat;
    ```
-3. Connect to your new `urbanheat` database.
-4. Execute the SQL schema creation script provided in this toolkit:
+3. Connect to your new database.
+4. Execute the SQL schema creation script provided in this toolkit to create all tables, keys, and spatial indexes:
    * Using command-line psql:
      ```bash
-     # Execute schema file on the database
-     psql -U postgres -d urbanheat -f Database/schema.sql
+     # Execute schema file on your database server (replace user, host, database as needed)
+     psql -U postgres -h GEOG_778 -d urbanheat -f Database/schema.sql
      ```
-   * Or simply open `Database/schema.sql` in pgAdmin's Query Tool, select all code, and click **Execute**.
+   * Or simply open `Database/schema.sql` in pgAdmin's Query Tool, connect to your server `GEOG_778`, select all code, and click **Execute**.
 
 ### Step 3: Set Up the Python Virtual Environment
 1. Open a terminal or PowerShell console and navigate to the project directory:
@@ -105,9 +105,13 @@ Download and install the following software for your platform (Windows/macOS/Lin
    ```
 3. Activate the virtual environment:
    * On Windows (PowerShell):
+     If Windows blocks the script execution, run the bypass command first:
      ```powershell
-     # Activate powershell
-     venv\Scripts\Activate.ps1
+     # Bypasses execution policy restrictions for the current PowerShell terminal session
+     Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+
+     # Activate the virtual environment
+     .\venv\Scripts\Activate.ps1
      ```
    * On Windows (Command Prompt):
      ```cmd
@@ -121,20 +125,54 @@ Download and install the following software for your platform (Windows/macOS/Lin
      ```
 
 ### Step 4: Install Python Dependencies
-With your virtual environment activated, install all required GIS, database, and backend libraries:
-```bash
-# Install core web service, ORM, database adapters, and GIS math dependencies
-pip install fastapi uvicorn sqlalchemy psycopg2-binary geopandas rasterio shapely pandas numpy
+With your virtual environment activated, install all required GIS, database, and backend libraries using the provided `requirements.txt` file:
+```powershell
+# Install all required Python packages
+pip install -r requirements.txt
 ```
 
 ### Step 5: Start the FastAPI Backend Server
 1. Activate your virtual environment (if not already done).
-2. Start the FastAPI development web service on port 8000:
-   ```bash
-   # Run the server using uvicorn with hot-reload enabled
-   uvicorn Backend.app:fastapi_application_instance --reload --port 8000
-   ```
-3. Open your browser and navigate to: `http://127.0.0.1:8000/`
+2. Configure your database connection string to point to your database server (e.g. `GEOG_778`). Set the `DATABASE_URL` environment variable before running the server:
+   * On Windows (PowerShell):
+     ```powershell
+     # Set the database URL environment variable (replace user, password, database, port as needed)
+     $env:DATABASE_URL="postgresql://postgres:postgres@GEOG_778:5432/urbanheat"
+     ```
+   * On Windows (Command Prompt):
+     ```cmd
+     :: Set the database URL environment variable
+     set DATABASE_URL=postgresql://postgres:postgres@GEOG_778:5432/urbanheat
+     ```
+   * On macOS/Linux:
+     ```bash
+     # Set the database URL environment variable
+     export DATABASE_URL="postgresql://postgres:postgres@GEOG_778:5432/urbanheat"
+     ```
+3. Start the FastAPI development web service on port 8000 using one of these options:
+   * **Option A: Standard Command (If Activated)**
+     * On Windows (PowerShell):
+       ```powershell
+       # Start the server with hot-reload enabled
+       uvicorn Backend.app:fastapi_application_instance --reload --port 8000
+       ```
+     * On Windows (Command Prompt) / macOS / Linux:
+       ```bash
+       # Start the server
+       uvicorn Backend.app:fastapi_application_instance --reload --port 8000
+       ```
+   * **Option B: Direct Python Execution (Bypasses uvicorn command path issues)**
+     * On Windows (PowerShell):
+       ```powershell
+       # Run uvicorn as a module using the virtual environment's python executable
+       .\venv\Scripts\python.exe -m uvicorn Backend.app:fastapi_application_instance --reload --port 8000
+       ```
+     * On Windows (Command Prompt):
+       ```cmd
+       :: Run uvicorn directly
+       venv\Scripts\python.exe -m uvicorn Backend.app:fastapi_application_instance --reload --port 8000
+       ```
+4. Open your browser and navigate to: `http://127.0.0.1:8000/`
    * You should see a JSON welcome response indicating that the backend service is online.
    * You can explore the interactive API Documentation panel at: `http://127.0.0.1:8000/docs`
 

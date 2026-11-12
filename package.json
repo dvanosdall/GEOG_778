@@ -1,0 +1,30 @@
+{
+  "name": "omaha-urban-heat-mitigation-toolkit",
+  "version": "1.0.0",
+  "description": "Geospatial Multi-Criteria Decision-Support Toolkit for Urban Heat Mitigation in Omaha, Nebraska",
+  "main": "Frontend/index.html",
+  "scripts": {
+    "start": "echo \"The frontend is a standalone CDN-based application. Double-click Frontend/index.html to launch, or start the backend in Backend/app.py.\""
+  },
+  "keywords": [
+    "gis",
+    "keplergl",
+    "react",
+    "urbanheat",
+    "omaha",
+    "mcda"
+  ],
+  "author": "David Vanosdall",
+  "license": "MIT",
+  "dependencies": {
+    "kepler.gl": "2.5.5",
+    "mapbox-gl": "1.13.2",
+    "react": "16.14.0",
+    "react-dom": "16.14.0",
+    "react-is": "16.13.1",
+    "react-redux": "7.2.6",
+    "redux": "4.1.2",
+    "regenerator-runtime": "0.13.9",
+    "styled-components": "5.3.3"
+  }
+}

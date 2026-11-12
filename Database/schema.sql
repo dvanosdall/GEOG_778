@@ -107,16 +107,16 @@ CREATE TABLE IF NOT EXISTS multi_criteria_planning_scenarios (
     scenario_name VARCHAR(255) UNIQUE NOT NULL,
     -- Detailed description of the scenario and its planning objectives
     scenario_description TEXT,
-    -- The numerical weight assigned to the land surface temperature criterion (ranging from 0.0 to 1.0)
-    land_surface_temperature_criterion_weight NUMERIC(3, 2) NOT NULL DEFAULT 1.0 CHECK (land_surface_temperature_criterion_weight >= 0.0 AND land_surface_temperature_criterion_weight <= 1.0),
-    -- The numerical weight assigned to the tree canopy coverage deficit criterion (ranging from 0.0 to 1.0)
-    tree_canopy_deficit_criterion_weight NUMERIC(3, 2) NOT NULL DEFAULT 1.0 CHECK (tree_canopy_deficit_criterion_weight >= 0.0 AND tree_canopy_deficit_criterion_weight <= 1.0),
-    -- The numerical weight assigned to the impervious surface coverage criterion (ranging from 0.0 to 1.0)
-    impervious_surface_criterion_weight NUMERIC(3, 2) NOT NULL DEFAULT 1.0 CHECK (impervious_surface_criterion_weight >= 0.0 AND impervious_surface_criterion_weight <= 1.0),
-    -- The numerical weight assigned to the population density criterion (ranging from 0.0 to 1.0)
-    population_density_criterion_weight NUMERIC(3, 2) NOT NULL DEFAULT 1.0 CHECK (population_density_criterion_weight >= 0.0 AND population_density_criterion_weight <= 1.0),
-    -- The numerical weight assigned to the socio-demographic vulnerability criterion (ranging from 0.0 to 1.0)
-    demographic_vulnerability_criterion_weight NUMERIC(3, 2) NOT NULL DEFAULT 1.0 CHECK (demographic_vulnerability_criterion_weight >= 0.0 AND demographic_vulnerability_criterion_weight <= 1.0),
+    -- The numerical weight assigned to the land surface temperature criterion (ranging from 0.0 to 10.0)
+    land_surface_temperature_criterion_weight NUMERIC(4, 2) NOT NULL DEFAULT 1.0 CHECK (land_surface_temperature_criterion_weight >= 0.0 AND land_surface_temperature_criterion_weight <= 10.0),
+    -- The numerical weight assigned to the tree canopy coverage deficit criterion (ranging from 0.0 to 10.0)
+    tree_canopy_deficit_criterion_weight NUMERIC(4, 2) NOT NULL DEFAULT 1.0 CHECK (tree_canopy_deficit_criterion_weight >= 0.0 AND tree_canopy_deficit_criterion_weight <= 10.0),
+    -- The numerical weight assigned to the impervious surface coverage criterion (ranging from 0.0 to 10.0)
+    impervious_surface_criterion_weight NUMERIC(4, 2) NOT NULL DEFAULT 1.0 CHECK (impervious_surface_criterion_weight >= 0.0 AND impervious_surface_criterion_weight <= 10.0),
+    -- The numerical weight assigned to the population density criterion (ranging from 0.0 to 10.0)
+    population_density_criterion_weight NUMERIC(4, 2) NOT NULL DEFAULT 1.0 CHECK (population_density_criterion_weight >= 0.0 AND population_density_criterion_weight <= 10.0),
+    -- The numerical weight assigned to the socio-demographic vulnerability criterion (ranging from 0.0 to 10.0)
+    demographic_vulnerability_criterion_weight NUMERIC(4, 2) NOT NULL DEFAULT 1.0 CHECK (demographic_vulnerability_criterion_weight >= 0.0 AND demographic_vulnerability_criterion_weight <= 10.0),
     -- Timestamp indicating when this scenario configuration was created
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     -- Timestamp indicating when this scenario was last updated

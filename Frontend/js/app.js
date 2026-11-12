@@ -3,6 +3,46 @@
    Coordinates Redux, renders panel sliders, queries FastAPI, and manages maps
    ============================================================================== */
 
+// Check if the required CDN libraries loaded successfully, otherwise display a helpful network error on screen
+if (!window.React || !window.ReactDOM || !window.Redux || !window.KeplerGl) {
+    document.addEventListener("DOMContentLoaded", () => {
+        const errorContainer = document.getElementById("dashboard-application-container");
+        if (errorContainer) {
+            errorContainer.style.padding = "40px";
+            errorContainer.style.display = "flex";
+            errorContainer.style.flexDirection = "column";
+            errorContainer.style.alignItems = "center";
+            errorContainer.style.justifyContent = "center";
+            errorContainer.style.height = "100vh";
+            errorContainer.style.backgroundColor = "#0f172a";
+            errorContainer.style.color = "#f8fafc";
+            errorContainer.style.textAlign = "center";
+            errorContainer.style.fontFamily = "'Inter', sans-serif";
+
+            errorContainer.innerHTML = `
+                <div style="max-width: 600px; background-color: #1e293b; border: 1px solid #e11d48; border-radius: 8px; padding: 32px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                    <h1 style="color: #f43f5e; font-size: 24px; margin-bottom: 16px; font-weight: 700;">Network Connection Blocked</h1>
+                    <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; margin-bottom: 20px;">
+                        It looks like your local computer's corporate firewall or security proxy is blocking access to our mapping CDNs (specifically <strong>unpkg.com</strong>).
+                    </p>
+                    <p style="font-size: 14px; line-height: 1.6; color: #cbd5e1; margin-bottom: 20px; font-weight: 500;">
+                        This is completely expected on secured corporate networks!
+                    </p>
+                    <p style="font-size: 13px; line-height: 1.6; color: #94a3b8; margin-bottom: 24px;">
+                        To run and test this toolkit successfully, you can:
+                    </p>
+                    <div style="text-align: left; margin: 0 auto; max-width: 480px; font-size: 13px; color: #cbd5e1; line-height: 1.8; background-color: #0f172a; padding: 20px; border-radius: 6px; border: 1px solid #334155;">
+                        1. <strong>Run on another PC</strong>: Transfer this project folder to a personal or standard network with full internet access.<br>
+                        2. <strong>Work offline</strong>: Since we created a full set of stubs, you can continue to edit Python and PostgreSQL schemas locally.
+                    </div>
+                </div>
+            `;
+        }
+    });
+    // Stop executing the rest of the script to avoid syntax and undefined errors
+    throw new Error("Missing CDN dependencies due to network proxy blocks.");
+}
+
 // Set up raw GeoJSON dataset using our global window generator
 const rawOmahaGeoJsonDataset = window.generateOmahaStudyAreaGeometries();
 
@@ -17,8 +57,7 @@ const rootReducerInstance = Redux.combineReducers({
 // Create central Redux store injecting middleware tasks
 const storeInstance = Redux.createStore(
     rootReducerInstance,
-    {},
-    Redux.applyMiddleware(KeplerGl.taskMiddleware)
+    {}
 );
 
 // Declare the dashboard component using hooks
@@ -87,7 +126,7 @@ const DecisionSupportDashboardApplication = () => {
     // Formats any prioritized GeoJSON feature collection and pushes it into the Kepler instance
     const renderDatasetIntoKeplerMap = (calculatedGeoJsonData) => {
         const totalFeatures = calculatedGeoJsonData.features;
-        
+
         // Refresh sidebar inspector to show fresh MCDA scores for the currently selected cell
         if (inspectedBlockGroupRecord) {
             const matchingFreshRecord = totalFeatures.find(feat => feat.properties.id === inspectedBlockGroupRecord.id);
@@ -98,99 +137,26 @@ const DecisionSupportDashboardApplication = () => {
             setInspectedBlockGroupRecord(totalFeatures[0].properties);
         }
 
-        // Map calculated columns into Kepler's schema
+        // Parse the calculated GeoJSON dataset using Kepler's native GeoJSON processor
+        const processedKeplerData = KeplerGl.processGeojson ? 
+            KeplerGl.processGeojson(calculatedGeoJsonData) : 
+            KeplerGl.processors.processGeojson(calculatedGeoJsonData);
+
+        console.log("[INFO] Processed Kepler Data:", processedKeplerData);
+
+        // Format dataset structure for Kepler.gl ingestion
         const keplerDatasetStructure = {
             info: {
                 id: 'omaha_block_groups_dataset',
                 label: 'Omaha Mitigation Priorities'
             },
-            data: {
-                fields: [
-                    { name: 'id', type: 'integer' },
-                    { name: 'fips_code', type: 'string' },
-                    { name: 'total_population', type: 'integer' },
-                    { name: 'population_under_five', type: 'integer' },
-                    { name: 'population_sixty_five_and_older', type: 'integer' },
-                    { name: 'raw_temperature_celsius', type: 'real' },
-                    { name: 'raw_canopy_percentage', type: 'real' },
-                    { name: 'raw_impervious_percentage', type: 'real' },
-                    { name: 'raw_vulnerability_index', type: 'real' },
-                    { name: 'normalized_temp_score', type: 'real' },
-                    { name: 'normalized_canopy_deficit_score', type: 'real' },
-                    { name: 'normalized_impervious_score', type: 'real' },
-                    { name: 'normalized_demographic_score', type: 'real' },
-                    { name: 'final_mitigation_priority_score', type: 'real' },
-                    { name: 'recommended_intervention_type', type: 'string' },
-                    { name: 'geometry', type: 'geojson' }
-                ],
-                rows: totalFeatures.map(feat => [
-                    feat.properties.id,
-                    feat.properties.fips_code,
-                    feat.properties.total_population,
-                    feat.properties.population_under_five,
-                    feat.properties.population_sixty_five_and_older,
-                    feat.properties.raw_temperature_celsius,
-                    feat.properties.raw_canopy_percentage,
-                    feat.properties.raw_impervious_percentage,
-                    feat.properties.raw_vulnerability_index,
-                    feat.properties.normalized_temp_score,
-                    feat.properties.normalized_canopy_deficit_score,
-                    feat.properties.normalized_impervious_score,
-                    feat.properties.normalized_demographic_score,
-                    feat.properties.final_mitigation_priority_score,
-                    feat.properties.recommended_intervention_type,
-                    feat.geometry
-                ])
-            }
+            data: processedKeplerData
         };
 
         // Layout styles and mapping styles for choropleth layers
         const keplerConfigStructure = {
             version: 'v1',
             config: {
-                visState: {
-                    layers: [
-                        {
-                            id: 'omaha_priority_choropleth_layer',
-                            type: 'geojson',
-                            config: {
-                                dataId: 'omaha_block_groups_dataset',
-                                label: 'Omaha Priority Level',
-                                color: [255, 153, 0],
-                                columns: { geojson: 'geometry' },
-                                isVisible: true,
-                                visConfig: {
-                                    opacity: 0.75,
-                                    strokeColor: [255, 255, 255],
-                                    strokeOpacity: 0.3,
-                                    thickness: 0.8,
-                                    colorRange: {
-                                        name: 'Global Warm',
-                                        type: 'sequential',
-                                        colors: ['#fef0d9', '#fdd49e', '#fdbb84', '#fc8d59', '#ef6548', '#d7301f', '#990000']
-                                    },
-                                    colorField: {
-                                        name: 'final_mitigation_priority_score',
-                                        type: 'real'
-                                    }
-                                }
-                            }
-                        }
-                    ],
-                    interactionConfig: {
-                        tooltip: {
-                            fieldsToShow: [
-                                { name: 'fips_code', format: null },
-                                { name: 'final_mitigation_priority_score', format: null },
-                                { name: 'raw_temperature_celsius', format: null },
-                                { name: 'raw_canopy_percentage', format: null },
-                                { name: 'recommended_intervention_type', format: null }
-                            ],
-                            enabled: true
-                        },
-                        brush: { enabled: false }
-                    }
-                },
                 mapState: {
                     bearing: 0,
                     dragRotate: false,
@@ -317,21 +283,21 @@ const DecisionSupportDashboardApplication = () => {
     return React.createElement(
         'div',
         { id: 'dashboard-application-container' },
-        
+
         // Sidebar control panel
         React.createElement(
             'div',
             { id: 'control-and-inspection-panel' },
-            
+
             // Drawer Header Node
             React.createElement(
                 'div',
                 { className: 'panel-header-container' },
                 React.createElement('h1', { className: 'panel-header-title' }, 'Urban Heat Toolkit'),
                 React.createElement('p', { className: 'panel-header-subtitle' }, 'Multi-Criteria Decision-Support Decision Engine for Omaha, NE'),
-                
+
                 // Connection Mode indicator Banner
-                useBackendAPI ? 
+                useBackendAPI ?
                     React.createElement('span', { className: 'connection-mode-banner connection-mode-online' }, 'Database Connected') :
                     React.createElement('span', { className: 'connection-mode-banner connection-mode-offline' }, 'Offline Mockup Mode')
             ),
@@ -341,7 +307,7 @@ const DecisionSupportDashboardApplication = () => {
                 'div',
                 { className: 'panel-section-container' },
                 React.createElement('h2', { className: 'section-title-label' }, '1. Planning Criteria Weights'),
-                
+
                 // Temperature Weight slider
                 React.createElement(
                     'div',
@@ -422,7 +388,7 @@ const DecisionSupportDashboardApplication = () => {
                 React.createElement(
                     'div',
                     { className: 'summary-statistics-cards-grid' },
-                    
+
                     React.createElement('div', { className: 'metric-card-element' },
                         React.createElement('span', { className: 'metric-card-label' }, 'Avg Priority Score'),
                         React.createElement('span', { className: 'metric-card-value-text' }, `${averagePriorityScoreValue}/100`),
@@ -442,7 +408,7 @@ const DecisionSupportDashboardApplication = () => {
                 'div',
                 { className: 'panel-section-container', style: { flexGrow: 1, borderBottom: 'none' } },
                 React.createElement('h2', { className: 'section-title-label' }, '3. Focus Area Inspection'),
-                
+
                 inspectedBlockGroupRecord ? React.createElement(
                     'div',
                     { className: 'feature-inspector-container' },
@@ -493,7 +459,7 @@ const DecisionSupportDashboardApplication = () => {
         React.createElement(
             'div',
             { id: 'map-visualization-viewport' },
-            
+
             // Kepler component
             React.createElement(KeplerGl.KeplerGl, {
                 id: 'omaha_toolkit_map',

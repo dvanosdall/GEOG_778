@@ -76,12 +76,12 @@ class MultiCriteriaPlanningScenariosModel(BaseDeclarativeModelClass):
     scenario_name = Column(String(255), unique=True, nullable=False)
     # Description of planning scenario intent
     scenario_description = Column(Text, nullable=True)
-    # Normalized criteria weights (0.0 to 1.0)
-    land_surface_temperature_criterion_weight = Column(Numeric(3, 2), nullable=False, default=1.0)
-    tree_canopy_deficit_criterion_weight = Column(Numeric(3, 2), nullable=False, default=1.0)
-    impervious_surface_criterion_weight = Column(Numeric(3, 2), nullable=False, default=1.0)
-    population_density_criterion_weight = Column(Numeric(3, 2), nullable=False, default=1.0)
-    demographic_vulnerability_criterion_weight = Column(Numeric(3, 2), nullable=False, default=1.0)
+    # Normalized criteria weights (0.0 to 10.0)
+    land_surface_temperature_criterion_weight = Column(Numeric(4, 2), nullable=False, default=1.0)
+    tree_canopy_deficit_criterion_weight = Column(Numeric(4, 2), nullable=False, default=1.0)
+    impervious_surface_criterion_weight = Column(Numeric(4, 2), nullable=False, default=1.0)
+    population_density_criterion_weight = Column(Numeric(4, 2), nullable=False, default=1.0)
+    demographic_vulnerability_criterion_weight = Column(Numeric(4, 2), nullable=False, default=1.0)
 
 
 # ==============================================================================
@@ -99,7 +99,7 @@ fastapi_application_instance = FastAPI(
 fastapi_application_instance.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -166,7 +166,8 @@ def generate_simulated_omaha_geojson_features():
     for rowIndex in range(gridRowsCount):
         for colIndex in range(gridColumnsCount):
             numericalId = (rowIndex * gridColumnsCount) + colIndex + 1
-            fipsCodeString = f"3105500{String(numericalId).padStart(3, '0')}0"
+            # Generate a valid 12-digit Census block group GEOID: State (31), County (055), Tract (9800xx), Block Group (1)
+            fipsCodeString = f"310559800{numericalId:02d}1"
             
             # Boundary coordinates
             minLong = omahaLongitudeCenter + (colIndex - (gridColumnsCount / 2.0)) * gridSpacingDegrees
@@ -255,12 +256,16 @@ def get_all_block_groups_data(db_session: Session = Depends(get_database_session
                 "features": simulated_features_collection
             }
         
-        # Assemble SQL query to extract geometries as GeoJSON string format directly from PostGIS
+        # Assemble SQL query to extract geometries as GeoJSON string format directly from PostGIS,
+        # performing spatial intersections to average canopy and impervious grids, and computing demographic vulnerability.
         raw_spatial_query = text("""
-            SELECT block_group_id, census_block_group_fips_code, total_population_count, 
-                   vulnerable_population_under_five_years, vulnerable_population_sixty_five_and_older, 
-                   median_household_income_usd, ST_AsGeoJSON(block_group_geometry) as geojson_geom 
-            FROM census_block_group_demographics;
+            SELECT bg.block_group_id, bg.census_block_group_fips_code, bg.total_population_count, 
+                   bg.vulnerable_population_under_five_years, bg.vulnerable_population_sixty_five_and_older, 
+                   COALESCE((SELECT AVG(tc.canopy_coverage_percentage) FROM tree_canopy_cover_grid_cells tc WHERE ST_Intersects(bg.block_group_geometry, tc.grid_cell_geometry)), 15.0) as avg_canopy,
+                   COALESCE((SELECT AVG(imp.impervious_surface_percentage) FROM impervious_surface_grid_cells imp WHERE ST_Intersects(bg.block_group_geometry, imp.grid_cell_geometry)), 45.0) as avg_impervious,
+                   COALESCE((bg.vulnerable_population_under_five_years + bg.vulnerable_population_sixty_five_and_older)::float / NULLIF(bg.total_population_count, 0) * 100.0, 50.0) as vulnerability_index,
+                   ST_AsGeoJSON(bg.block_group_geometry) as geojson_geom 
+            FROM census_block_group_demographics bg;
         """)
         
         spatial_query_results = db_session.execute(raw_spatial_query)
@@ -280,11 +285,11 @@ def get_all_block_groups_data(db_session: Session = Depends(get_database_session
                     "total_population": spatial_row.total_population_count,
                     "population_under_five": spatial_row.vulnerable_population_under_five_years,
                     "population_sixty_five_and_older": spatial_row.vulnerable_population_sixty_five_and_older,
-                    # Retrieve environmental indicators (simulated fallback placeholder values or joins)
+                    # Retrieve environmental indicators from our spatial subqueries, defaulting temperature realistically
                     "raw_temperature_celsius": 32.5,
-                    "raw_canopy_percentage": 15.0,
-                    "raw_impervious_percentage": 45.0,
-                    "raw_vulnerability_index": 50.0
+                    "raw_canopy_percentage": round(float(spatial_row.avg_canopy), 2),
+                    "raw_impervious_percentage": round(float(spatial_row.avg_impervious), 2),
+                    "raw_vulnerability_index": round(float(spatial_row.vulnerability_index), 2)
                 },
                 "geometry": geometry_dictionary
             }
