@@ -13,6 +13,14 @@ body {
     overflow: hidden;
 }
 
+/* Base mounting root container covering full screen */
+#root {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
 /* Master container setting up the flex viewport split */
 #dashboard-application-container {
     display: flex;
@@ -34,9 +42,10 @@ body {
     overflow-y: auto;
 }
 
-/* Map viewport growing to fill remaining screen space */
+/* Map viewport growing to fill remaining screen space with explicit non-zero dimensions */
 #map-visualization-viewport {
-    flex-grow: 1;
-    height: 100%;
+    width: calc(100vw - 420px);
+    height: 100vh;
     position: relative;
+    overflow: hidden;
 }

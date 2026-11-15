@@ -19,6 +19,17 @@ from sqlalchemy import create_engine, Column, Integer, String, Numeric, Text, Fo
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
+# Load private environment variables from local .env files if they exist
+env_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if os.path.exists(env_file_path):
+    with open(env_file_path, "r") as target_env_file:
+        for env_line in target_env_file:
+            stripped_line = env_line.strip()
+            # Ignore empty lines and comments
+            if stripped_line and not stripped_line.startswith("#"):
+                env_key, env_value = stripped_line.split("=", 1)
+                os.environ[env_key.strip()] = env_value.strip()
+
 # Define the database URL, defaulting to local PostgreSQL database "urbanheat"
 # Uses environment variables if set, otherwise falls back to standard local credentials
 POSTGRES_DATABASE_CONNECTION_URL = os.environ.get(

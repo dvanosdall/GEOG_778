@@ -43,6 +43,16 @@ if (!window.React || !window.ReactDOM || !window.Redux || !window.KeplerGl) {
     throw new Error("Missing CDN dependencies due to network proxy blocks.");
 }
 
+// Set the global Mapbox GL access token directly to ensure standard Mapbox layers authenticate successfully
+console.log("[INFO] Checking Globals:", window.mapboxgl, window.urbanHeatApplicationConfig);
+if (window.mapboxgl && window.urbanHeatApplicationConfig) {
+    const resolvedToken = (window.urbanHeatApplicationConfig.mapboxPublicAccessToken && window.urbanHeatApplicationConfig.mapboxPublicAccessToken.startsWith('pk.')) ? 
+        window.urbanHeatApplicationConfig.mapboxPublicAccessToken : 
+        (localStorage.getItem('mapbox_token') || 'pk.placeholder');
+    window.mapboxgl.accessToken = resolvedToken;
+    console.log("[INFO] Global Mapbox Token Set:", window.mapboxgl.accessToken);
+}
+
 // Set up raw GeoJSON dataset using our global window generator
 const rawOmahaGeoJsonDataset = window.generateOmahaStudyAreaGeometries();
 
@@ -55,9 +65,17 @@ const rootReducerInstance = Redux.combineReducers({
 });
 
 // Create central Redux store injecting middleware tasks
+var keplerMiddlewares;
+if (window.KeplerGl && typeof window.KeplerGl.enhanceReduxMiddleware === "function") {
+    keplerMiddlewares = window.KeplerGl.enhanceReduxMiddleware([]);
+} else {
+    keplerMiddlewares = [];
+}
+
 const storeInstance = Redux.createStore(
     rootReducerInstance,
-    {}
+    {},
+    Redux.applyMiddleware.apply(null, keplerMiddlewares)
 );
 
 // Declare the dashboard component using hooks
@@ -123,7 +141,7 @@ const DecisionSupportDashboardApplication = () => {
     }, [useBackendAPI]);
 
     // Inspect Kepler's internal UI state changes
-    const keplerStateInstance = ReactRedux.useSelector(state => state.keplerGl.omaha_toolkit_map);
+    const keplerStateInstance = ReactRedux.useSelector(state => state.keplerGl.map);
 
     // Sync the custom sidebar inspector automatically whenever a user hovers over or clicks a polygon
     React.useEffect(() => {
@@ -188,33 +206,25 @@ const DecisionSupportDashboardApplication = () => {
                     isSplit: false
                 },
                 mapStyle: {
-                    styleType: 'carto_dark',
-                    mapStyles: [
-                        {
-                            id: 'carto_dark',
-                            label: 'CartoDB Dark Matter',
-                            url: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-                            icon: 'https://api.mapbox.com/v4/mapbox.dark/page.png'
-                        }
-                    ],
-                    visibleLayerGroups: {
-                        label: true,
-                        road: true,
-                        border: true,
-                        building: true,
-                        water: true,
-                        land: true
-                    }
+                    styleType: 'dark'
                 }
             }
         };
 
-        // Dispatch dataset and styling to the Kepler map instance
-        dispatch(KeplerGl.addDataToMap({
+        // Register the Mapbox Access Token directly inside Kepler's Redux state style reducer
+        // This ensures the Mapbox GL map engine has direct synchronous access to the token on mount!
+        const activeMapboxToken = (window.urbanHeatApplicationConfig && window.urbanHeatApplicationConfig.mapboxPublicAccessToken) ? 
+            window.urbanHeatApplicationConfig.mapboxPublicAccessToken : 
+            'pk.placeholder';
+        dispatch(KeplerGl.wrapTo('map', KeplerGl.inputMapStyle({ mapboxApiAccessToken: activeMapboxToken })));
+
+        // Dispatch dataset and styling to the Kepler map instance, wrapped with wrapTo('map')
+        // This is strictly required in combined Redux reducers to route the action to the correct map instance state!
+        dispatch(KeplerGl.wrapTo('map', KeplerGl.addDataToMap({
             datasets: [keplerDatasetStructure],
             options: { keepExistingConfig: false },
             config: keplerConfigStructure
-        }));
+        })));
 
         setIsWorkflowProcessing(false);
     };
@@ -498,10 +508,13 @@ const DecisionSupportDashboardApplication = () => {
 
             // Kepler component
             React.createElement(KeplerGl.KeplerGl, {
-                id: 'omaha_toolkit_map',
+                id: 'map',
                 width: window.innerWidth - 420,
                 height: window.innerHeight,
-                mapboxApiAccessToken: window.urbanHeatApplicationConfig.mapboxPublicAccessToken || 'pk.eyJ1IjoibW9ja2VkdG9rZW4iLCJhIjoiY2p4NDV2cmx3MDB6ZDN6bzh2b3QycTJkayJ9.mockedtoken_notneeded'
+                getState: state => state.keplerGl,
+                mapboxApiAccessToken: (window.urbanHeatApplicationConfig && window.urbanHeatApplicationConfig.mapboxPublicAccessToken && window.urbanHeatApplicationConfig.mapboxPublicAccessToken.startsWith('pk.')) ? 
+                    window.urbanHeatApplicationConfig.mapboxPublicAccessToken : 
+                    (localStorage.getItem('mapbox_token') || 'pk.placeholder')
             }),
 
             // Loading screen overlay during MCDA processing runs
@@ -613,5 +626,5 @@ ReactDOM.render(
         { store: storeInstance },
         React.createElement(DecisionSupportDashboardApplication)
     ),
-    document.getElementById('dashboard-application-container')
+    document.getElementById('root')
 );

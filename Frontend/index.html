@@ -44,7 +44,7 @@
 <body>
 
     <!-- Target container where the complete Dashboard will be rendered -->
-    <div id="dashboard-application-container"></div>
+    <div id="root"></div>
 
     <!-- Load decoupled modular javascript files containing generator logic, MCDA math, and React mounting -->
     <script src="js/data_generator.js"></script>
@@ -54,9 +54,9 @@
     <script src="js/config.js"></script>
     <script>
         // Initialize an empty config object fallback if config.js was not created or loaded yet
-        if (!window.urbanHeatApplicationConfig) {
+        if (!window.urbanHeatApplicationConfig || !window.urbanHeatApplicationConfig.mapboxPublicAccessToken) {
             window.urbanHeatApplicationConfig = {
-                mapboxPublicAccessToken: "YOUR_MAPBOX_TOKEN_HERE"
+                mapboxPublicAccessToken: "pk.placeholder"
             };
         }
     </script>
