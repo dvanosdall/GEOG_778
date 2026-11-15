@@ -32,3 +32,7 @@ Frontend/js/config.js
 # Ignore backend and database config environment secrets
 .env
 Backend/.env
+
+data/
+data/*
+data/**
