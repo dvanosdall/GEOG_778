@@ -63,8 +63,8 @@ class CensusBlockGroupDemographicsModel(BaseDeclarativeModelClass):
 
     # Primary key unique identifier
     block_group_id = Column(Integer, primary_key=True, index=True)
-    # 12-character census FIPS code identifier
-    census_block_group_fips_code = Column(String(12), unique=True, nullable=False, index=True)
+    # Census FIPS code identifier (supporting up to 50 characters)
+    census_block_group_fips_code = Column(String(50), unique=True, nullable=False, index=True)
     # Total count of population
     total_population_count = Column(Integer, nullable=False)
     # Population under five years old
@@ -73,6 +73,10 @@ class CensusBlockGroupDemographicsModel(BaseDeclarativeModelClass):
     vulnerable_population_sixty_five_and_older = Column(Integer, nullable=False)
     # Median household income
     median_household_income_usd = Column(Numeric(12, 2), nullable=True)
+    # Pre-calculated environmental criteria columns
+    mean_land_surface_temperature_celsius = Column(Numeric, nullable=True)
+    mean_canopy_coverage_percentage = Column(Numeric, nullable=True)
+    mean_impervious_surface_percentage = Column(Numeric, nullable=True)
 
 
 class MultiCriteriaPlanningScenariosModel(BaseDeclarativeModelClass):
@@ -268,12 +272,13 @@ def get_all_block_groups_data(db_session: Session = Depends(get_database_session
             }
         
         # Assemble SQL query to extract geometries as GeoJSON string format directly from PostGIS,
-        # performing spatial intersections to average canopy and impervious grids, and computing demographic vulnerability.
+        # retrieving pre-calculated environmental criteria from the demographics table.
         raw_spatial_query = text("""
             SELECT bg.block_group_id, bg.census_block_group_fips_code, bg.total_population_count, 
                    bg.vulnerable_population_under_five_years, bg.vulnerable_population_sixty_five_and_older, 
-                   COALESCE((SELECT AVG(tc.canopy_coverage_percentage) FROM tree_canopy_cover_grid_cells tc WHERE ST_Intersects(bg.block_group_geometry, tc.grid_cell_geometry)), 15.0) as avg_canopy,
-                   COALESCE((SELECT AVG(imp.impervious_surface_percentage) FROM impervious_surface_grid_cells imp WHERE ST_Intersects(bg.block_group_geometry, imp.grid_cell_geometry)), 45.0) as avg_impervious,
+                   COALESCE(bg.mean_land_surface_temperature_celsius, 32.5) as avg_temp,
+                   COALESCE(bg.mean_canopy_coverage_percentage, 15.0) as avg_canopy,
+                   COALESCE(bg.mean_impervious_surface_percentage, 45.0) as avg_impervious,
                    COALESCE((bg.vulnerable_population_under_five_years + bg.vulnerable_population_sixty_five_and_older)::float / NULLIF(bg.total_population_count, 0) * 100.0, 50.0) as vulnerability_index,
                    ST_AsGeoJSON(bg.block_group_geometry) as geojson_geom 
             FROM census_block_group_demographics bg;
@@ -296,8 +301,8 @@ def get_all_block_groups_data(db_session: Session = Depends(get_database_session
                     "total_population": spatial_row.total_population_count,
                     "population_under_five": spatial_row.vulnerable_population_under_five_years,
                     "population_sixty_five_and_older": spatial_row.vulnerable_population_sixty_five_and_older,
-                    # Retrieve environmental indicators from our spatial subqueries, defaulting temperature realistically
-                    "raw_temperature_celsius": 32.5,
+                    # Retrieve environmental indicators from pre-calculated columns
+                    "raw_temperature_celsius": round(float(spatial_row.avg_temp), 2),
                     "raw_canopy_percentage": round(float(spatial_row.avg_canopy), 2),
                     "raw_impervious_percentage": round(float(spatial_row.avg_impervious), 2),
                     "raw_vulnerability_index": round(float(spatial_row.vulnerability_index), 2)

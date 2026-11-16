@@ -134,6 +134,16 @@ def load_processed_data_to_postgresql(geodataframe, database_url):
         # Ensure the FIPS code column can accommodate longer GEO_ID/GIS_JOIN values dynamically
         database_cursor.execute("ALTER TABLE census_block_group_demographics ALTER COLUMN census_block_group_fips_code TYPE VARCHAR(50);")
         
+        # Ensure pre-calculated environmental columns exist dynamically on the demographics table
+        database_cursor.execute("ALTER TABLE census_block_group_demographics ADD COLUMN IF NOT EXISTS mean_land_surface_temperature_celsius DOUBLE PRECISION;")
+        database_cursor.execute("ALTER TABLE census_block_group_demographics ADD COLUMN IF NOT EXISTS mean_canopy_coverage_percentage DOUBLE PRECISION;")
+        database_cursor.execute("ALTER TABLE census_block_group_demographics ADD COLUMN IF NOT EXISTS mean_impervious_surface_percentage DOUBLE PRECISION;")
+        
+        # Alter columns type dynamically in case they were previously created with a lower NUMERIC precision limit
+        database_cursor.execute("ALTER TABLE census_block_group_demographics ALTER COLUMN mean_land_surface_temperature_celsius TYPE DOUBLE PRECISION;")
+        database_cursor.execute("ALTER TABLE census_block_group_demographics ALTER COLUMN mean_canopy_coverage_percentage TYPE DOUBLE PRECISION;")
+        database_cursor.execute("ALTER TABLE census_block_group_demographics ALTER COLUMN mean_impervious_surface_percentage TYPE DOUBLE PRECISION;")
+        
         # Clear (truncate) any old or mock records in the demographics table before loading fresh data
         print("[INFO] Truncating old database records in 'census_block_group_demographics' table...")
         database_cursor.execute("TRUNCATE TABLE census_block_group_demographics CASCADE;")
@@ -146,16 +156,22 @@ def load_processed_data_to_postgresql(geodataframe, database_url):
             under_five_pop = int(census_row["population_under_five"])
             over_sixty_five_pop = int(census_row["population_sixty_five_and_older"])
             
+            # Extract raw pre-calculated environmental zonal metrics safely
+            temp_val = float(census_row["raw_temperature_celsius"]) if "raw_temperature_celsius" in census_row else 32.5
+            canopy_val = float(census_row["raw_canopy_percentage"]) if "raw_canopy_percentage" in census_row else 15.0
+            impervious_val = float(census_row["raw_impervious_percentage"]) if "raw_impervious_percentage" in census_row else 45.0
+            
             # Convert the shapely polygon geometry into standard Well-Known Text (WKT) format
             wkt_geometry_string = census_row["geometry"].wkt
             
             # Insert record using ST_GeomFromText to register coordinates into PostGIS geometry column
             database_cursor.execute("""
                 INSERT INTO census_block_group_demographics 
-                    (census_block_group_fips_code, total_population_count, vulnerable_population_under_five_years, vulnerable_population_sixty_five_and_older, block_group_geometry)
+                    (census_block_group_fips_code, total_population_count, vulnerable_population_under_five_years, vulnerable_population_sixty_five_and_older, 
+                     mean_land_surface_temperature_celsius, mean_canopy_coverage_percentage, mean_impervious_surface_percentage, block_group_geometry)
                 VALUES 
-                    (%s, %s, %s, %s, ST_GeomFromText(%s, 4326));
-            """, (fips_code, total_population, under_five_pop, over_sixty_five_pop, wkt_geometry_string))
+                    (%s, %s, %s, %s, %s, %s, %s, ST_GeomFromText(%s, 4326));
+            """, (fips_code, total_population, under_five_pop, over_sixty_five_pop, temp_val, canopy_val, impervious_val, wkt_geometry_string))
             
         # Commit transaction and release connection resources
         database_connection.commit()
@@ -183,8 +199,11 @@ def calculate_zonal_temperature_statistics(census_demographics_geodataframe, tem
         # Create an empty list to store computed mean temperature values for each geographic polygon
         computed_mean_temperatures_list = []
 
+        # Reproject the entire geodataframe to match the raster's native coordinate reference system (CRS) on-the-fly
+        reprojected_geodataframe = census_demographics_geodataframe.to_crs(surface_temperature_raster.crs)
+
         # Iterate through each census block group record in the geodataframe
-        for geo_index, block_group_row in census_demographics_geodataframe.iterrows():
+        for geo_index, block_group_row in reprojected_geodataframe.iterrows():
             try:
                 # Wrap the polygon geometry in a list to format it for rasterio masking
                 polygon_geometry_list = [block_group_row.geometry]
@@ -240,8 +259,11 @@ def calculate_zonal_canopy_statistics(census_demographics_geodataframe, canopy_r
         # Create an empty list to store computed mean canopy values for each geographic polygon
         computed_mean_canopy_list = []
 
+        # Reproject the entire geodataframe to match the canopy raster's native CRS on-the-fly
+        reprojected_geodataframe = census_demographics_geodataframe.to_crs(canopy_raster.crs)
+
         # Iterate through each census block group record in the geodataframe
-        for geo_index, block_group_row in census_demographics_geodataframe.iterrows():
+        for geo_index, block_group_row in reprojected_geodataframe.iterrows():
             try:
                 # Wrap the polygon geometry in a list to format it for rasterio masking
                 polygon_geometry_list = [block_group_row.geometry]
@@ -297,8 +319,11 @@ def calculate_zonal_impervious_statistics(census_demographics_geodataframe, impe
         # Create an empty list to store computed mean impervious values for each geographic polygon
         computed_mean_impervious_list = []
 
+        # Reproject the entire geodataframe to match the impervious raster's native CRS on-the-fly
+        reprojected_geodataframe = census_demographics_geodataframe.to_crs(impervious_raster.crs)
+
         # Iterate through each census block group record in the geodataframe
-        for geo_index, block_group_row in census_demographics_geodataframe.iterrows():
+        for geo_index, block_group_row in reprojected_geodataframe.iterrows():
             try:
                 # Wrap the polygon geometry in a list to format it for rasterio masking
                 polygon_geometry_list = [block_group_row.geometry]

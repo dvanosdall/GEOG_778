@@ -78,8 +78,8 @@ ON impervious_surface_grid_cells USING GIST (grid_cell_geometry);
 CREATE TABLE IF NOT EXISTS census_block_group_demographics (
     -- Unique identifier for each census block group
     block_group_id SERIAL PRIMARY KEY,
-    -- The standard 12-character Federal Information Processing Series (FIPS) identifier for the block group
-    census_block_group_fips_code VARCHAR(12) UNIQUE NOT NULL,
+    -- The standard Federal Information Processing Series (FIPS) identifier for the block group
+    census_block_group_fips_code VARCHAR(50) UNIQUE NOT NULL,
     -- Total population count living in the block group
     total_population_count INTEGER NOT NULL CHECK (total_population_count >= 0),
     -- Number of individuals under 5 years old (vulnerable to extreme heat)
@@ -88,6 +88,10 @@ CREATE TABLE IF NOT EXISTS census_block_group_demographics (
     vulnerable_population_sixty_five_and_older INTEGER NOT NULL CHECK (vulnerable_population_sixty_five_and_older >= 0),
     -- Median household income of the block group in USD
     median_household_income_usd NUMERIC(12, 2) CHECK (median_household_income_usd >= 0.0),
+    -- Pre-calculated environmental criteria from spatial zonal statistics
+    mean_land_surface_temperature_celsius DOUBLE PRECISION,
+    mean_canopy_coverage_percentage DOUBLE PRECISION,
+    mean_impervious_surface_percentage DOUBLE PRECISION,
     -- Spatial multi-polygon representing the boundary of the census block group in EPSG:4326
     block_group_geometry GEOMETRY(MultiPolygon, 4326) NOT NULL,
     -- Timestamp indicating when this demographic record was created

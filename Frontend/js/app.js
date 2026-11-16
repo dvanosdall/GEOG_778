@@ -86,8 +86,8 @@ const DecisionSupportDashboardApplication = () => {
     const [imperviousWeightParam, setImperviousWeightParam] = React.useState(3);
     const [vulnerabilityWeightParam, setVulnerabilityWeightParam] = React.useState(5);
 
-    // API connectivity states
-    const [useBackendAPI, setUseBackendAPI] = React.useState(false);
+    // API connectivity states (initially null to prevent clashing datasets during startup checks)
+    const [useBackendAPI, setUseBackendAPI] = React.useState(null);
 
     // Selected features state
     const [inspectedBlockGroupRecord, setInspectedBlockGroupRecord] = React.useState(null);
@@ -137,7 +137,9 @@ const DecisionSupportDashboardApplication = () => {
 
     // Recalculate and update the Kepler map layer as soon as API mode state changes or settles
     React.useEffect(() => {
-        triggerMCDARecalculationAndRefresh();
+        if (useBackendAPI !== null) {
+            triggerMCDARecalculationAndRefresh();
+        }
     }, [useBackendAPI]);
 
     // Inspect Kepler's internal UI state changes
@@ -207,6 +209,41 @@ const DecisionSupportDashboardApplication = () => {
                 },
                 mapStyle: {
                     styleType: 'dark'
+                },
+                visState: {
+                    layers: [
+                        {
+                            id: 'omaha_priority_layer',
+                            type: 'geojson',
+                            config: {
+                                dataId: 'omaha_block_groups_dataset',
+                                label: 'Omaha Mitigation Priorities',
+                                color: [18, 147, 154],
+                                columns: {
+                                    geojson: 'geometry'
+                                },
+                                isVisible: true,
+                                visConfig: {
+                                    opacity: 0.8,
+                                    strokeOpacity: 0.8,
+                                    thickness: 0.5,
+                                    strokeColor: [255, 255, 255],
+                                    colorRange: {
+                                        name: 'Global Warming',
+                                        type: 'sequential',
+                                        category: 'Uber',
+                                        colors: ["#5A1846", "#900C3F", "#C70039", "#FF5733", "#FFC300", "#F1F1F1"].reverse()
+                                    },
+                                    filled: true
+                                },
+                                colorField: {
+                                    name: 'final_mitigation_priority_score',
+                                    type: 'real'
+                                },
+                                colorScale: 'quantile'
+                            }
+                        }
+                    ]
                 }
             }
         };
@@ -554,6 +591,15 @@ const DecisionSupportDashboardApplication = () => {
                     
                     React.createElement('h3', null, 'Overview & Purpose'),
                     React.createElement('p', null, 'This decision-support toolkit integrates physical environmental metrics, land cover databases, and demographic census data into a Multi-Criteria Decision Analysis (MCDA) framework. It is designed to identify priority areas and target interventions (urban forestry, cool pavements, shade structures) to mitigate urban heat stress across Omaha, Nebraska.'),
+                    
+                    React.createElement('h3', null, 'User Guide: How to Interact with the Map'),
+                    React.createElement('p', null, '1. Map Navigation: Left-click and drag to pan across Omaha. Scroll your mouse wheel up/down to zoom in or out. Right-click and drag up/down to tilt the map into a 3D viewpoint.'),
+                    React.createElement('p', null, '2. Hover to Quick Inspect: Move your cursor over any neighborhood polygon. A floating tooltip will instantly display its FIPS code, average summer temperature, tree canopy, and custom strategy.'),
+                    React.createElement('p', null, '3. Click to Lock & Inspect: Left-click on any neighborhood polygon. This "locks" that specific neighborhood into the right-hand panel (Section 3: Focus Area Inspection) in the sidebar, displaying its detailed census and environmental metrics.'),
+                    React.createElement('p', null, '4. Custom Physical Recommendations: At the very bottom of Section 3, a highlighted callout box displays a specific physical cooling intervention (such as Forestry Expansion, Cool Roofs, or Rain Gardens) customized precisely matching that neighborhood\'s local data.'),
+                    
+                    React.createElement('h3', null, 'Understanding the Weight Sliders'),
+                    React.createElement('p', null, 'Adjusting the weights (Section 1) simulates different planning priorities. Dragging a slider high forces the system to emphasize that specific criteria (e.g. prioritizing tree deficits or vulnerable age groups). Clicking "Apply weights & Recalculate" automatically computes the live priorities and updates the map\'s heatmap dynamically!'),
                     
                     React.createElement('h3', null, 'Primary Spatial Data Sources'),
                     React.createElement(

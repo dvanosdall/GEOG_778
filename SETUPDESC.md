@@ -253,3 +253,74 @@ For local municipal reference layers (streets, municipal boundaries, schools, pa
 * **Verbose and Clear Variables**: Names throughout Python, JavaScript, and SQL (e.g., `calculated_final_mitigation_priority_score`) are explicitly defined for clarity.
 * **Block Comments Placement**: All inline documentation is written directly **above** the line or block of code it describes.
 * **Zero Software Installations**: Designed to run immediately with native tools and CDN assets.
+
+---
+
+## Decision-Support MCDA Weighting & User Interaction Guide
+
+This guide explains how the Multi-Criteria Decision Analysis (MCDA) weighting engine calculates priorities and how you can interact with the toolkit to explore planning scenarios.
+
+### 1. How the MCDA Weighting Engine Works
+
+The toolkit evaluates **four spatial planning criteria** to identify which neighborhoods are in the most urgent need of heat-mitigation interventions:
+
+1. **Land Surface Temperature (LST) [0 - 10]**: Extracted from Landsat 9 thermal infrared band 10. Higher temperatures represent higher priority.
+2. **Tree Canopy Deficit [0 - 10]**: Extracted from the USDA Forest Service canopy database. Lower existing canopy coverage (higher deficit) represents higher priority.
+3. **Impervious Surfaces [0 - 10]**: Extracted from the NLCD developed land cover database. Higher concrete, roof, and asphalt density represents higher priority.
+4. **Social Vulnerability [0 - 10]**: Calculated from the Census ACS demographics. Higher counts of heat-vulnerable age groups (children under 5 and seniors over 65) represent higher priority.
+
+#### The Weighting Mathematics:
+When you adjust the sliders on the left, you are assigning raw importance weights to each of the four criteria. The system calculates the final priority score using a **Weighted Linear Combination (WLC)**:
+
+$$\text{Priority Score} = (T_{norm} \times W_{temp}) + (C_{norm} \times W_{canopy}) + (I_{norm} \times W_{imperv}) + (V_{norm} \times W_{vulner})$$
+
+* All raw criteria values are first normalized to a standardized **0.0 to 100.0 scale** ($T_{norm}$, $C_{norm}$, etc.) so they can be mathematically compared.
+* The raw slider weights are automatically rescaled to **proportionally sum to exactly 1.0 (100%)** ($W_{temp}$, etc.). This ensures that regardless of what raw numbers you slide, the final score will always fit perfectly on a clean **0.0 to 100.0 scale**.
+
+---
+
+### 2. Planning Scenarios & What to Expect When Sliding
+
+By adjusting the sliders, you are simulating different policy directives:
+
+* **Scenario A: "Extreme Urban Heat Islands First" (Focus on LST & Concrete)**
+  * *Slider Settings*: Slide **Temperature** to 10, **Impervious Surfaces** to 8, others to 1.
+  * *Expectation*: The map will turn deep red in the heavily developed urban core, industrial corridors, and commercial downtown areas of Omaha where asphalt and steel trap thermal heat.
+* **Scenario B: "Urban Forestry & Green Equity" (Focus on Canopy Deficit)**
+  * *Slider Settings*: Slide **Tree Canopy Deficit** to 10, others to 1.
+  * *Expectation*: Highlights neighborhoods lacking natural shade. This guides urban foresters exactly where to plant new trees to maximize canopy cooling.
+* **Scenario C: "Socio-Environmental Vulnerability" (Focus on Demographics)**
+  * *Slider Settings*: Slide **Social Vulnerability** to 10, others to 1.
+  * *Expectation*: Prioritizes neighborhoods with dense populations of young children and elderly residents, ensuring municipal cooling centers and shade structures protect the most vulnerable people first.
+
+---
+
+### 3. Understanding the Dashboard Card Metrics
+
+The **Section 2: Scenario Statistics** cards provide high-level citywide summaries under your active scenario:
+
+1. **Avg Priority Score (e.g. 54.2 / 100)**:
+   * Represents the mathematical average of the priority scores across all 489 block groups in Omaha. 
+   * Useful for comparing scenarios: a higher average indicates a scenario with more widespread critical needs, whereas a lower average indicates a more balanced citywide spread.
+2. **High Priority Pop (e.g. 84,350 Residents)**:
+   * Counts the **total number of residents** living in focus areas that have scored **60.0 or higher** under your current weights.
+   * *Strategic Use*: Helps planners quantify the human impact! For example, shifting a slider from Scenario A to Scenario C might increase the "High Priority Pop" from 40k to 90k, proving that Scenario C successfully targets denser, more populated neighborhoods.
+
+---
+
+### 4. Interactive User Help File: How to Use the Map
+
+#### **A. Navigation Controls**
+* **Pan (Move around)**: Left-click and drag anywhere on the map.
+* **Zoom In / Out**: Use your mouse scroll-wheel, or click the `+` and `-` buttons in the top right corner of the map canvas.
+* **Rotate / Tilt**: Right-click and drag up/down to tilt the map into 3D space, or left/right to rotate the compass.
+
+#### **B. Layer & Legend Controls (Left-Hand Panel)**
+* Click the small arrow button **`>`** in the top left corner of the map to expand the **Kepler.gl Control Panel**.
+* Click the **Layers icon** (the stacked layers page) to see your layers list.
+* Click the small **Legend icon** (the list lines) to expand a floating legend showing you exactly what the Yellow-Red colors represent on the map scale.
+
+#### **C. Inspecting Neighborhoods**
+* **Hover**: Move your mouse over any neighborhood polygon. A floating tooltip will display its FIPS code, average temperature, canopy cover, and recommended intervention.
+* **Click to Inspect**: Left-click on any polygon. This "locks" the neighborhood into **Section 3: Focus Area Inspection** in the right-hand sidebar.
+* **Mitigation Recommendation**: Look at the highlighted dark-green callout box in Section 3. It will recommend a specific, targeted physical strategy (such as **`Urban Forestry`**, **`Cool Roof Retrofits`**, or **`Pervious Paving`**) customized precisely for that neighborhood's environmental and social conditions!
