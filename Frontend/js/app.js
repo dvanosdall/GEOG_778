@@ -46,8 +46,8 @@ if (!window.React || !window.ReactDOM || !window.Redux || !window.KeplerGl) {
 // Set the global Mapbox GL access token directly to ensure standard Mapbox layers authenticate successfully
 console.log("[INFO] Checking Globals:", window.mapboxgl, window.urbanHeatApplicationConfig);
 if (window.mapboxgl && window.urbanHeatApplicationConfig) {
-    const resolvedToken = (window.urbanHeatApplicationConfig.mapboxPublicAccessToken && window.urbanHeatApplicationConfig.mapboxPublicAccessToken.startsWith('pk.')) ? 
-        window.urbanHeatApplicationConfig.mapboxPublicAccessToken : 
+    const resolvedToken = (window.urbanHeatApplicationConfig.mapboxPublicAccessToken && window.urbanHeatApplicationConfig.mapboxPublicAccessToken.startsWith('pk.')) ?
+        window.urbanHeatApplicationConfig.mapboxPublicAccessToken :
         (localStorage.getItem('mapbox_token') || 'pk.placeholder');
     window.mapboxgl.accessToken = resolvedToken;
     console.log("[INFO] Global Mapbox Token Set:", window.mapboxgl.accessToken);
@@ -157,9 +157,6 @@ const DecisionSupportDashboardApplication = () => {
             if (activeInspectSource && activeInspectSource.object) {
                 const propertiesExtract = activeInspectSource.object.properties;
                 setInspectedBlockGroupRecord(propertiesExtract);
-            } else if (!inspectedBlockGroupRecord && rawOmahaGeoJsonDataset.features.length > 0) {
-                // Initialize with first grid cell
-                setInspectedBlockGroupRecord(rawOmahaGeoJsonDataset.features[0].properties);
             }
         }
     }, [keplerStateInstance]);
@@ -171,24 +168,34 @@ const DecisionSupportDashboardApplication = () => {
         // Refresh sidebar inspector to show fresh MCDA scores for the currently selected cell
         if (inspectedBlockGroupRecord) {
             const matchingFreshRecord = totalFeatures.find(feat => feat.properties.id === inspectedBlockGroupRecord.id);
-            if (matchingFreshRecord) {
-                setInspectedBlockGroupRecord(matchingFreshRecord.properties);
-            }
-        } else {
+            setInspectedBlockGroupRecord(matchingFreshRecord ? matchingFreshRecord.properties : totalFeatures[0].properties);
+        } else if (totalFeatures.length > 0) {
             setInspectedBlockGroupRecord(totalFeatures[0].properties);
         }
 
+        const scores = calculatedGeoJsonData.features.map(feat => feat.properties.final_mitigation_priority_score);
+        console.log("[INFO] Calculated priority score list:", scores);
+
         // Parse the calculated GeoJSON dataset using Kepler's native GeoJSON processor
-        const processedKeplerData = KeplerGl.processGeojson ? 
-            KeplerGl.processGeojson(calculatedGeoJsonData) : 
+        const processedKeplerData = KeplerGl.processGeojson ?
+            KeplerGl.processGeojson(calculatedGeoJsonData) :
             KeplerGl.processors.processGeojson(calculatedGeoJsonData);
 
         console.log("[INFO] Processed Kepler Data:", processedKeplerData);
+        console.log("[INFO] Processed fields names:", processedKeplerData.fields.map(f => f.name));
+
+        const detectedFieldObj = processedKeplerData.fields.find(field => field.name === 'final_mitigation_priority_score');
+        const priorityScoreFieldType = detectedFieldObj ? detectedFieldObj.type : 'real';
+        console.log("[INFO] Dynamic field type of final_mitigation_priority_score:", priorityScoreFieldType);
+
+        // Dynamically generated IDs to bypass Kepler.gl state reconciliation/race condition conflicts
+        const uniqueDatasetId = `omaha_block_groups_dataset_${Date.now()}`;
+        const uniqueLayerId = `omaha_priority_layer_${Date.now()}`;
 
         // Format dataset structure for Kepler.gl ingestion
         const keplerDatasetStructure = {
             info: {
-                id: 'omaha_block_groups_dataset',
+                id: uniqueDatasetId,
                 label: 'Omaha Mitigation Priorities'
             },
             data: processedKeplerData
@@ -213,14 +220,14 @@ const DecisionSupportDashboardApplication = () => {
                 visState: {
                     layers: [
                         {
-                            id: 'omaha_priority_layer',
+                            id: uniqueLayerId,
                             type: 'geojson',
                             config: {
-                                dataId: 'omaha_block_groups_dataset',
+                                dataId: uniqueDatasetId,
                                 label: 'Omaha Mitigation Priorities',
                                 color: [18, 147, 154],
                                 columns: {
-                                    geojson: 'geometry'
+                                    geojson: 'geojson'
                                 },
                                 isVisible: true,
                                 visConfig: {
@@ -229,18 +236,14 @@ const DecisionSupportDashboardApplication = () => {
                                     thickness: 0.5,
                                     strokeColor: [255, 255, 255],
                                     colorRange: {
-                                        name: 'Global Warming',
+                                        name: 'Colorblind-Safe Purple Palette',
                                         type: 'sequential',
-                                        category: 'Uber',
-                                        colors: ["#5A1846", "#900C3F", "#C70039", "#FF5733", "#FFC300", "#F1F1F1"].reverse()
+                                        category: 'Custom',
+                                        colors: ["#f3e8ff", "#d8b4fe", "#c084fc", "#9333ea", "#6b21a8", "#4c1d95"]
                                     },
-                                    filled: true
-                                },
-                                colorField: {
-                                    name: 'final_mitigation_priority_score',
-                                    type: 'real'
-                                },
-                                colorScale: 'quantile'
+                                    filled: true,
+                                    stroked: true
+                                }
                             }
                         }
                     ]
@@ -249,21 +252,58 @@ const DecisionSupportDashboardApplication = () => {
         };
 
         // Register the Mapbox Access Token directly inside Kepler's Redux state style reducer
-        // This ensures the Mapbox GL map engine has direct synchronous access to the token on mount!
-        const activeMapboxToken = (window.urbanHeatApplicationConfig && window.urbanHeatApplicationConfig.mapboxPublicAccessToken) ? 
-            window.urbanHeatApplicationConfig.mapboxPublicAccessToken : 
+        const activeMapboxToken = (window.urbanHeatApplicationConfig && window.urbanHeatApplicationConfig.mapboxPublicAccessToken) ?
+            window.urbanHeatApplicationConfig.mapboxPublicAccessToken :
             'pk.placeholder';
         dispatch(KeplerGl.wrapTo('map', KeplerGl.inputMapStyle({ mapboxApiAccessToken: activeMapboxToken })));
 
-        // Dispatch dataset and styling to the Kepler map instance, wrapped with wrapTo('map')
-        // This is strictly required in combined Redux reducers to route the action to the correct map instance state!
+        // Phase 1: Ingest dataset with full keplerConfigStructure + autoCreateLayers fallback
         dispatch(KeplerGl.wrapTo('map', KeplerGl.addDataToMap({
             datasets: [keplerDatasetStructure],
-            options: { keepExistingConfig: false },
+            options: {
+                keepExistingConfig: false,
+                autoCreateLayers: true
+            },
             config: keplerConfigStructure
         })));
 
-        setIsWorkflowProcessing(false);
+        // Phase 2 (150ms delay): Configure the auto-created layer's label, palette, and colorField
+        setTimeout(() => {
+            const getLatestLayer = () => storeInstance.getState().keplerGl.map.visState.layers[0];
+            const datasets = storeInstance.getState().keplerGl.map.visState.datasets;
+            const targetLayer = getLatestLayer();
+
+            if (targetLayer && datasets[uniqueDatasetId]) {
+                const targetField = datasets[uniqueDatasetId].fields.find(
+                    f => f.name === 'final_mitigation_priority_score'
+                );
+
+                if (KeplerGl.layerVisConfigChange) {
+                    dispatch(KeplerGl.wrapTo('map', KeplerGl.layerVisConfigChange(
+                        getLatestLayer(),
+                        {
+                            opacity: 0.8,
+                            strokeColor: [255, 255, 255],
+                            colorRange: {
+                                name: 'Colorblind-Safe Purple Palette',
+                                type: 'sequential',
+                                category: 'Custom',
+                                colors: ["#f3e8ff", "#d8b4fe", "#c084fc", "#9333ea", "#6b21a8", "#4c1d95"]
+                            }
+                        }
+                    )));
+                }
+
+                if (targetField && KeplerGl.layerVisualChannelConfigChange) {
+                    dispatch(KeplerGl.wrapTo('map', KeplerGl.layerVisualChannelConfigChange(
+                        getLatestLayer(),
+                        { colorField: targetField, colorScale: 'quantile' },
+                        'color'
+                    )));
+                }
+            }
+            setIsWorkflowProcessing(false);
+        }, 150);
     };
 
     // Orchestrates the calculation request, choosing between backend API or standalone browser engine
@@ -549,8 +589,8 @@ const DecisionSupportDashboardApplication = () => {
                 width: window.innerWidth - 420,
                 height: window.innerHeight,
                 getState: state => state.keplerGl,
-                mapboxApiAccessToken: (window.urbanHeatApplicationConfig && window.urbanHeatApplicationConfig.mapboxPublicAccessToken && window.urbanHeatApplicationConfig.mapboxPublicAccessToken.startsWith('pk.')) ? 
-                    window.urbanHeatApplicationConfig.mapboxPublicAccessToken : 
+                mapboxApiAccessToken: (window.urbanHeatApplicationConfig && window.urbanHeatApplicationConfig.mapboxPublicAccessToken && window.urbanHeatApplicationConfig.mapboxPublicAccessToken.startsWith('pk.')) ?
+                    window.urbanHeatApplicationConfig.mapboxPublicAccessToken :
                     (localStorage.getItem('mapbox_token') || 'pk.placeholder')
             }),
 
@@ -567,12 +607,12 @@ const DecisionSupportDashboardApplication = () => {
         isAboutModalOpen ? React.createElement(
             'div',
             { className: 'about-modal-overlay-backdrop', onClick: () => setIsAboutModalOpen(false) },
-            
+
             // Modal Card Container
             React.createElement(
                 'div',
                 { className: 'about-modal-card-box', onClick: (evt) => evt.stopPropagation() },
-                
+
                 // Modal Header block
                 React.createElement(
                     'div',
@@ -583,73 +623,73 @@ const DecisionSupportDashboardApplication = () => {
                         onClick: () => setIsAboutModalOpen(false)
                     }, '✕')
                 ),
-                
+
                 // Modal Body Scrollable area
                 React.createElement(
                     'div',
                     { className: 'about-modal-body-scrollable' },
-                    
+
                     React.createElement('h3', null, 'Overview & Purpose'),
                     React.createElement('p', null, 'This decision-support toolkit integrates physical environmental metrics, land cover databases, and demographic census data into a Multi-Criteria Decision Analysis (MCDA) framework. It is designed to identify priority areas and target interventions (urban forestry, cool pavements, shade structures) to mitigate urban heat stress across Omaha, Nebraska.'),
-                    
+
                     React.createElement('h3', null, 'User Guide: How to Interact with the Map'),
                     React.createElement('p', null, '1. Map Navigation: Left-click and drag to pan across Omaha. Scroll your mouse wheel up/down to zoom in or out. Right-click and drag up/down to tilt the map into a 3D viewpoint.'),
                     React.createElement('p', null, '2. Hover to Quick Inspect: Move your cursor over any neighborhood polygon. A floating tooltip will instantly display its FIPS code, average summer temperature, tree canopy, and custom strategy.'),
                     React.createElement('p', null, '3. Click to Lock & Inspect: Left-click on any neighborhood polygon. This "locks" that specific neighborhood into the right-hand panel (Section 3: Focus Area Inspection) in the sidebar, displaying its detailed census and environmental metrics.'),
                     React.createElement('p', null, '4. Custom Physical Recommendations: At the very bottom of Section 3, a highlighted callout box displays a specific physical cooling intervention (such as Forestry Expansion, Cool Roofs, or Rain Gardens) customized precisely matching that neighborhood\'s local data.'),
-                    
+
                     React.createElement('h3', null, 'Understanding the Weight Sliders'),
                     React.createElement('p', null, 'Adjusting the weights (Section 1) simulates different planning priorities. Dragging a slider high forces the system to emphasize that specific criteria (e.g. prioritizing tree deficits or vulnerable age groups). Clicking "Apply weights & Recalculate" automatically computes the live priorities and updates the map\'s heatmap dynamically!'),
-                    
+
                     React.createElement('h3', null, 'Primary Spatial Data Sources'),
                     React.createElement(
                         'ul',
                         { className: 'about-modal-list-item-grid' },
-                        React.createElement('li', null, 
+                        React.createElement('li', null,
                             React.createElement('span', { className: 'about-modal-item-label' }, 'USGS Landsat Land Surface Temperature'),
                             React.createElement('a', { className: 'about-modal-item-link-anchor', href: 'https://www.usgs.gov/landsat-missions/landsat-surface-temperature', target: '_blank' }, 'Visit Website')
                         ),
-                        React.createElement('li', null, 
+                        React.createElement('li', null,
                             React.createElement('span', { className: 'about-modal-item-label' }, 'USDA Forest Service Tree Canopy Cover'),
                             React.createElement('a', { className: 'about-modal-item-link-anchor', href: 'https://data.fs.usda.gov/geodata/rastergateway/treecanopycover/', target: '_blank' }, 'Visit Website')
                         ),
-                        React.createElement('li', null, 
+                        React.createElement('li', null,
                             React.createElement('span', { className: 'about-modal-item-label' }, 'NLCD developed imperviousness'),
                             React.createElement('a', { className: 'about-modal-item-link-anchor', href: 'https://www.mrlc.gov/data', target: '_blank' }, 'Visit Website')
                         ),
-                        React.createElement('li', null, 
+                        React.createElement('li', null,
                             React.createElement('span', { className: 'about-modal-item-label' }, 'U.S. Census Bureau ACS demographics'),
                             React.createElement('a', { className: 'about-modal-item-link-anchor', href: 'https://www.census.gov/programs-surveys/acs/about.html', target: '_blank' }, 'Visit Website')
                         )
                     ),
-                    
+
                     React.createElement('h3', null, 'Core System Libraries'),
                     React.createElement(
                         'ul',
                         { className: 'about-modal-list-item-grid' },
-                        React.createElement('li', null, 
+                        React.createElement('li', null,
                             React.createElement('span', { className: 'about-modal-item-label' }, 'Geospatial mapping engine'),
                             React.createElement('span', null, 'Kepler.gl & Mapbox GL')
                         ),
-                        React.createElement('li', null, 
+                        React.createElement('li', null,
                             React.createElement('span', { className: 'about-modal-item-label' }, 'State architecture management'),
                             React.createElement('span', null, 'React & Redux')
                         ),
-                        React.createElement('li', null, 
+                        React.createElement('li', null,
                             React.createElement('span', { className: 'about-modal-item-label' }, 'Backend REST web service'),
                             React.createElement('span', null, 'FastAPI (Python)')
                         ),
-                        React.createElement('li', null, 
+                        React.createElement('li', null,
                             React.createElement('span', { className: 'about-modal-item-label' }, 'Database relational storage'),
                             React.createElement('span', null, 'PostgreSQL & PostGIS')
                         )
                     ),
-                    
+
                     React.createElement('h3', null, 'Project Information & Co-Authors'),
                     React.createElement('p', null, 'Created as an academic spatial analytics product under GEOG 778, Fall 2026, by David Vanosdall.'),
                     React.createElement('p', null, 'Scripting, code formatting, and spatial database configuration assisted by GitHub Copilot and conversational AI developer agents.')
                 ),
-                
+
                 // Modal Footer
                 React.createElement(
                     'div',
