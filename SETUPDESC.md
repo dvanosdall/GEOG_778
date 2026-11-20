@@ -318,7 +318,7 @@ The **Section 2: Scenario Statistics** cards provide high-level citywide summari
 #### **B. Layer & Legend Controls (Left-Hand Panel)**
 * Click the small arrow button **`>`** in the top left corner of the map to expand the **Kepler.gl Control Panel**.
 * Click the **Layers icon** (the stacked layers page) to see your layers list.
-* Click the small **Legend icon** (the list lines) to expand a floating legend showing you exactly what the Yellow-Red colors represent on the map scale.
+* Click the small **Legend icon** (the list lines) to expand a floating legend showing you exactly what the Light-to-Dark Purple colors represent on the map scale.
 
 #### **C. Inspecting Neighborhoods**
 * **Hover**: Move your mouse over any neighborhood polygon. A floating tooltip will display its FIPS code, average temperature, canopy cover, and recommended intervention.

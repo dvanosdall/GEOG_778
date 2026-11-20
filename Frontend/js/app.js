@@ -44,13 +44,11 @@ if (!window.React || !window.ReactDOM || !window.Redux || !window.KeplerGl) {
 }
 
 // Set the global Mapbox GL access token directly to ensure standard Mapbox layers authenticate successfully
-console.log("[INFO] Checking Globals:", window.mapboxgl, window.urbanHeatApplicationConfig);
 if (window.mapboxgl && window.urbanHeatApplicationConfig) {
     const resolvedToken = (window.urbanHeatApplicationConfig.mapboxPublicAccessToken && window.urbanHeatApplicationConfig.mapboxPublicAccessToken.startsWith('pk.')) ?
         window.urbanHeatApplicationConfig.mapboxPublicAccessToken :
         (localStorage.getItem('mapbox_token') || 'pk.placeholder');
     window.mapboxgl.accessToken = resolvedToken;
-    console.log("[INFO] Global Mapbox Token Set:", window.mapboxgl.accessToken);
 }
 
 // Set up raw GeoJSON dataset using our global window generator
@@ -92,29 +90,14 @@ const DecisionSupportDashboardApplication = () => {
     // Selected features state
     const [inspectedBlockGroupRecord, setInspectedBlockGroupRecord] = React.useState(null);
 
+    // Active calculated GeoJSON dataset (live FastAPI/PostGIS data when connected, or mockup fallback)
+    const [activeCalculatedGeojson, setActiveCalculatedGeojson] = React.useState(null);
+
     // Processing status state
     const [isWorkflowProcessing, setIsWorkflowProcessing] = React.useState(false);
 
     // About Dialog status state
     const [isAboutModalOpen, setIsAboutModalOpen] = React.useState(false);
-
-    // State for Mapbox Token input field
-    const [mapboxTokenInput, setMapboxTokenInput] = React.useState(localStorage.getItem('mapbox_token') || '');
-
-    // Function to save the token to browser local storage and reload the page
-    const handleSaveMapboxToken = () => {
-        if (mapboxTokenInput.trim().startsWith('pk.')) {
-            localStorage.setItem('mapbox_token', mapboxTokenInput.trim());
-            alert("Mapbox token saved successfully! Reloading map...");
-            window.location.reload();
-        } else if (mapboxTokenInput.trim() === '') {
-            localStorage.removeItem('mapbox_token');
-            alert("Mapbox token removed. Reloading map...");
-            window.location.reload();
-        } else {
-            alert("Invalid token format! Mapbox public tokens must start with 'pk.'.");
-        }
-    };
 
     // Redux store dispatch trigger
     const dispatch = ReactRedux.useDispatch();
@@ -163,6 +146,7 @@ const DecisionSupportDashboardApplication = () => {
 
     // Formats any prioritized GeoJSON feature collection and pushes it into the Kepler instance
     const renderDatasetIntoKeplerMap = (calculatedGeoJsonData) => {
+        setActiveCalculatedGeojson(calculatedGeoJsonData);
         const totalFeatures = calculatedGeoJsonData.features;
 
         // Refresh sidebar inspector to show fresh MCDA scores for the currently selected cell
@@ -173,20 +157,10 @@ const DecisionSupportDashboardApplication = () => {
             setInspectedBlockGroupRecord(totalFeatures[0].properties);
         }
 
-        const scores = calculatedGeoJsonData.features.map(feat => feat.properties.final_mitigation_priority_score);
-        console.log("[INFO] Calculated priority score list:", scores);
-
         // Parse the calculated GeoJSON dataset using Kepler's native GeoJSON processor
         const processedKeplerData = KeplerGl.processGeojson ?
             KeplerGl.processGeojson(calculatedGeoJsonData) :
             KeplerGl.processors.processGeojson(calculatedGeoJsonData);
-
-        console.log("[INFO] Processed Kepler Data:", processedKeplerData);
-        console.log("[INFO] Processed fields names:", processedKeplerData.fields.map(f => f.name));
-
-        const detectedFieldObj = processedKeplerData.fields.find(field => field.name === 'final_mitigation_priority_score');
-        const priorityScoreFieldType = detectedFieldObj ? detectedFieldObj.type : 'real';
-        console.log("[INFO] Dynamic field type of final_mitigation_priority_score:", priorityScoreFieldType);
 
         // Dynamically generated IDs to bypass Kepler.gl state reconciliation/race condition conflicts
         const uniqueDatasetId = `omaha_block_groups_dataset_${Date.now()}`;
@@ -355,7 +329,7 @@ const DecisionSupportDashboardApplication = () => {
 
     // Package calculated metrics as GeoJSON and download locally
     const exportComputedGeoJsonFile = () => {
-        const outputCalculatedCollection = window.recalculatePrioritizedScenarioResults(
+        const outputCalculatedCollection = activeCalculatedGeojson || window.recalculatePrioritizedScenarioResults(
             rawOmahaGeoJsonDataset,
             Number(temperatureWeightParam),
             Number(canopyDeficitWeightParam),
@@ -376,8 +350,8 @@ const DecisionSupportDashboardApplication = () => {
         URL.revokeObjectURL(blobAttachmentUrl);
     };
 
-    // Recalculate local variables to display real-time dashboard card stats
-    const currentScenarioCalculatedGeojson = window.recalculatePrioritizedScenarioResults(
+    // Use live backend dataset when available, falling back to browser mockup calculation
+    const currentScenarioCalculatedGeojson = activeCalculatedGeojson || window.recalculatePrioritizedScenarioResults(
         rawOmahaGeoJsonDataset,
         Number(temperatureWeightParam),
         Number(canopyDeficitWeightParam),
@@ -387,13 +361,13 @@ const DecisionSupportDashboardApplication = () => {
 
     // Sum vulnerable residents in block groups with priority score >= 60.0
     const totalProtectedVulnerablePopulation = currentScenarioCalculatedGeojson.features
-        .filter(feat => feat.properties.final_mitigation_priority_score >= 60.0)
-        .reduce((accum, feat) => accum + feat.properties.total_population, 0);
+        .filter(feat => (feat.properties.final_mitigation_priority_score || 0) >= 60.0)
+        .reduce((accum, feat) => accum + (feat.properties.total_population || 0), 0);
 
     // Compute average prioritization score across the full spatial mesh
     const summedPriorityScores = currentScenarioCalculatedGeojson.features
-        .reduce((accum, feat) => accum + feat.properties.final_mitigation_priority_score, 0);
-    const averagePriorityScoreValue = (summedPriorityScores / currentScenarioCalculatedGeojson.features.length).toFixed(1);
+        .reduce((accum, feat) => accum + (feat.properties.final_mitigation_priority_score || 0), 0);
+    const averagePriorityScoreValue = (summedPriorityScores / (currentScenarioCalculatedGeojson.features.length || 1)).toFixed(1);
 
     return React.createElement(
         'div',
@@ -409,7 +383,7 @@ const DecisionSupportDashboardApplication = () => {
                 'div',
                 { className: 'panel-header-container' },
                 React.createElement('h1', { className: 'panel-header-title' }, 'Urban Heat Toolkit'),
-                React.createElement('p', { className: 'panel-header-subtitle' }, 'Multi-Criteria Decision-Support Decision Engine for Omaha, NE'),
+                React.createElement('p', { className: 'panel-header-subtitle' }, 'Multi-Criteria Decision-Support Engine for Omaha, NE'),
 
                 // Connection Mode indicator Banner
                 useBackendAPI ?
@@ -555,6 +529,14 @@ const DecisionSupportDashboardApplication = () => {
                         React.createElement('span', { className: 'inspector-row-label-text' }, 'Demographics Count'),
                         React.createElement('span', { className: 'inspector-row-value-text' }, inspectedBlockGroupRecord.total_population ? inspectedBlockGroupRecord.total_population.toLocaleString() : 'N/A')
                     ),
+                    React.createElement('div', { className: 'inspector-row-item' },
+                        React.createElement('span', { className: 'inspector-row-label-text' }, 'Vulnerable (<5 / 65+)'),
+                        React.createElement('span', { className: 'inspector-row-value-text' },
+                            (inspectedBlockGroupRecord.population_under_five !== undefined && inspectedBlockGroupRecord.population_sixty_five_and_older !== undefined) ?
+                                `${inspectedBlockGroupRecord.population_under_five.toLocaleString()} / ${inspectedBlockGroupRecord.population_sixty_five_and_older.toLocaleString()} (${inspectedBlockGroupRecord.raw_vulnerability_index}%)` :
+                                'N/A'
+                        )
+                    ),
                     React.createElement('div', { className: 'inspector-row-item', style: { fontWeight: '700', borderBottom: 'none' } },
                         React.createElement('span', { className: 'inspector-row-label-text', style: { color: '#f1f5f9' } }, 'Final Priority Score'),
                         React.createElement('span', { className: 'inspector-row-value-text', style: { color: '#fb923c', fontSize: '14px' } }, `${inspectedBlockGroupRecord.final_mitigation_priority_score}/100`)
@@ -640,6 +622,13 @@ const DecisionSupportDashboardApplication = () => {
 
                     React.createElement('h3', null, 'Understanding the Weight Sliders'),
                     React.createElement('p', null, 'Adjusting the weights (Section 1) simulates different planning priorities. Dragging a slider high forces the system to emphasize that specific criteria (e.g. prioritizing tree deficits or vulnerable age groups). Clicking "Apply weights & Recalculate" automatically computes the live priorities and updates the map\'s heatmap dynamically!'),
+
+                    React.createElement('h3', null, 'Methodology & Calculations'),
+                    React.createElement('p', null, '1. Normalization (0–100 Scale): Each raw criterion is linearly scaled across the study area from 0 (lowest need) to 100 (highest need). Land Surface Temperature, Impervious Surfaces, and Social Vulnerability scale directly with higher values, while Tree Canopy is inverted (lower canopy = higher deficit score).'),
+                    React.createElement('p', null, '2. Social Vulnerability Index: Calculated as ((Population Under 5 + Population 65 and Older) / Total Population) × 100, capturing the share of residents most sensitive to extreme heat.'),
+                    React.createElement('p', null, '3. Weighted Linear Combination (MCDA): Your four slider weights (0–10) are proportionally rescaled to sum to 100% (1.0), then multiplied by each normalized criterion to compute the Final Priority Score (0–100).'),
+                    React.createElement('p', null, '4. Scenario Statistics: "Avg Priority Score" is the mean score across all block groups. "High Priority Pop" sums the Total Population of every block group scoring 60.0 or higher under your active weights.'),
+                    React.createElement('p', null, '5. Intervention Rules: Normalized scores trigger tailored strategies—Urban Forestry & Tree Canopy Expansion (Temp >= 60 & Canopy Deficit >= 65), Cool Roof & Cool Surface Retrofitting (Temp >= 60 & Impervious >= 70), Community Shade Structures & Parks (Temp >= 50 & Vulnerability >= 60), Pervious Paving & Rain Gardens (Impervious >= 50), or General Cool Infrastructure.'),
 
                     React.createElement('h3', null, 'Primary Spatial Data Sources'),
                     React.createElement(
